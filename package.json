@@ -1,22 +1,21 @@
 {
   "name": "bitcoin-keys-demo",
   "version": "0.1.0",
-  "description": "",
+  "description": "Various utilities for demonstrating addresses and keys",
   "main": "index.js",
   "keywords": [],
   "author": "John Bolton <jambolo@users.noreply.github.com> (https://jambolo.github.io)",
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^5.11.4",
-    "@testing-library/react": "^11.1.0",
-    "@testing-library/user-event": "^12.1.10",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1",
+    "@material-ui/core": "^4.11.1",
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0",
     "react-scripts": "4.0.1",
     "web-vitals": "^0.2.4"
   },
   "scripts": {
+    "compile": "coffee -c -o src/ -b cs/",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
