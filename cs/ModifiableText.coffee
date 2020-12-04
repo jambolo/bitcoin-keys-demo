@@ -1,10 +1,9 @@
 `
-import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
-import React, { Component } from 'react';
-import RefreshIcon from '@material-ui/icons/Refresh';
-import TextField from '@material-ui/core/TextField';
-import { makeStyles } from '@material-ui/core/styles';
+import IconButton from '@material-ui/core/IconButton'
+import React, { Component } from 'react'
+import RefreshIcon from '@material-ui/icons/Refresh'
+import TextField from '@material-ui/core/TextField'
+import { makeStyles } from '@material-ui/styles'
 `
 
 class ModifiableText extends Component
@@ -44,10 +43,18 @@ class ModifiableText extends Component
       }
     </div>
 
+useStyles = makeStyles( (theme) ->
+  {
+    root:
+      width: '70ch'
+  })
+
 ValidatedTextField = (props) ->
   { value, valid, helperText, onChange, onKeyDown } = props
+  classes = useStyles()
   if valid
-    <TextField 
+    <TextField
+      className={classes.root}
       variant="outlined"
       autoFocus 
       margin="normal" 
@@ -57,6 +64,7 @@ ValidatedTextField = (props) ->
     />
   else
     <TextField 
+      className={classes.root}
       error
       variant="outlined"
       autoFocus 

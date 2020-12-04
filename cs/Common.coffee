@@ -9,6 +9,8 @@ Crypto = require "crypto"
 #  width: 300px;
 #}
 export PRIVATE_KEY_SIZE = 256 / 8
+export DECODED_COMPRESSED_PRIVATE_KEY_SIZE = 1 + PRIVATE_KEY_SIZE + 1 + 4
+export DECODED_UNCOMPRESSED_PRIVATE_KEY_SIZE = 1 + PRIVATE_KEY_SIZE + 4
 export MAX_PRIVATE_KEY = Buffer.from("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140", 'hex')
 export MIN_PRIVATE_KEY = Buffer.from("0000000000000000000000000000000000000000000000000000000000000001", 'hex')
 
@@ -45,14 +47,16 @@ export encodeWif = (prefix, key, compressed) ->
 
 export decodeWif = (wif) ->
   return [ false ] if wif.match(/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/) == null
+
   work = Buffer.from(Base58.decode(wif))
-  if work.length == 1 + PRIVATE_KEY_SIZE + 4
+
+  if work.length == DECODED_UNCOMPRESSED_PRIVATE_KEY_SIZE
     prefix = work[0]
     privateKey = work.slice(1, 1 + PRIVATE_KEY_SIZE)
     checksum = work.slice(1 + PRIVATE_KEY_SIZE)
     computed = computeChecksum(work.slice(0, 1 + PRIVATE_KEY_SIZE))
     return [ true, false, prefix, privateKey, checksum ] if checksum.compare(computed) == 0
-  else if work.length == 1 + PRIVATE_KEY_SIZE + 1 + 4
+  else if work.length == DECODED_COMPRESSED_PRIVATE_KEY_SIZE
     prefix = work[0]
     privateKey = work.slice(1, 1 + PRIVATE_KEY_SIZE)
     compressed = work[1 + PRIVATE_KEY_SIZE]

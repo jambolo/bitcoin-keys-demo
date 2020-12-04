@@ -1,6 +1,9 @@
 `
-import Card from '@material-ui/core/Card';
-import React, { Component } from 'react';
+// import { generatePrivateKey, encodeWif, decodeWif, hexPrivateKeyValidator, wifValidator, computeChecksum } from './Common'
+// import { PRIVATE_KEY_SIZE, MIN_PRIVATE_KEY, MAX_PRIVATE_KEY } from './Common'
+
+// import Paper from '@material-ui/core/Paper'
+import React, { Component } from 'react'
 `
 
 #.my-card-content {
@@ -11,7 +14,7 @@ import React, { Component } from 'react';
 #  width: 300px;
 #}
 
-class AddressCard extends Component
+class AddressPaper extends Component
   constructor: (props) ->
     super props
 
@@ -41,4 +44,4 @@ class AddressCard extends Component
       Uncompressed Bech32 Address : {@uncompressed.bech32Address}<br/>
     </div>
 
-export default AddressCard
+export default AddressPaper
