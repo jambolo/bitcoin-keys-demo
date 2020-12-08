@@ -1,8 +1,6 @@
 `
-// import { generatePrivateKey, encodeWif, decodeWif, hexPrivateKeyValidator, wifValidator, computeChecksum } from './Common'
-// import { PRIVATE_KEY_SIZE, MIN_PRIVATE_KEY, MAX_PRIVATE_KEY } from './Common'
 
-// import Paper from '@material-ui/core/Paper'
+import Paper from '@material-ui/core/Paper'
 import React, { Component } from 'react'
 `
 
@@ -32,7 +30,7 @@ class AddressPaper extends Component
     return
 
   render: ->
-    <div>
+    <Paper variant="outlined">
       Private Key : {@privateKey}<br/>
       Compressed Public Key : {@compressed.publicKey}<br/>
       Compressed P2PKH Address : {@compressed.p2pkhAddress}<br/>
@@ -42,6 +40,6 @@ class AddressPaper extends Component
       Uncompressed P2PKH Address : {@uncompressed.p2pkhAddress}<br/>
       Uncompressed P2SH Address : {@uncompressed.p2shAddress}<br/>
       Uncompressed Bech32 Address : {@uncompressed.bech32Address}<br/>
-    </div>
+    </Paper>
 
 export default AddressPaper
