@@ -2,7 +2,7 @@
 import './App.css'
 import AddressPaper from './AddressPaper'
 import PrivateKeyPaper from './PrivateKeyPaper'
-// import PublicKeyPaper from './PublicKeyPaper'
+import PublicKeyPaper from './PublicKeyPaper'
 import TopBar from './TopBar'
 
 import React, { Component } from 'react'
@@ -13,7 +13,7 @@ class App extends Component
     super props
     @papers =
       "Private Key" : <PrivateKeyPaper app={this} />
-#      "Public Key" :  <PublicKeyPaper app={this} />
+      "Public Key" :  <PublicKeyPaper app={this} />
       "Address" :     <AddressPaper app={this} />
     @state =
       demo:  "Private Key"
