@@ -31,6 +31,7 @@ class ModifiableText extends Component
     <div>
       <ValidatedTextField
         value={@state.value}
+        label={@props.label}
         valid={valid}
         helperText={@props.helperText}
         onChange={@handleChange}
@@ -46,11 +47,11 @@ class ModifiableText extends Component
 useStyles = makeStyles( (theme) ->
   {
     root:
-      width: '70ch'
+      width: '140ch'
   })
 
 ValidatedTextField = (props) ->
-  { value, valid, helperText, onChange, onKeyDown } = props
+  { value, label, valid, helperText, onChange, onKeyDown } = props
   classes = useStyles()
   if valid
     <TextField
@@ -58,7 +59,8 @@ ValidatedTextField = (props) ->
       variant="outlined"
       autoFocus 
       margin="normal" 
-      value={value} 
+      value={value}
+      label={label}
       onChange={onChange}
       onKeyDown={onKeyDown}
     />
@@ -69,7 +71,8 @@ ValidatedTextField = (props) ->
       variant="outlined"
       autoFocus 
       margin="normal" 
-      value={value} 
+      value={value}
+      label={label}
       onChange={onChange}
       helperText={helperText}
     />

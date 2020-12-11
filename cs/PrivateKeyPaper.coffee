@@ -159,19 +159,17 @@ class PrivateKeyPaper extends Component
 WifEncodingPaper = (props) ->
   { privateKey, uncompressedChecksum, uncompressedWif, compressedChecksum, compressedWif, privateKeyValidator, onChange } = props
 
-  <Paper variant='outlined'>
+  <Paper>
     <Typography variant="h4">WIF Encoding</Typography>
     <div style={{margin: "1%"}}>
-      <Typography variant="h5">Private Key (hex):</Typography>
-      <div style={{margin: "1%"}}>
-        <Button variant="contained" color="primary" onClick={() => onChange(generatedPrivateKey().toString('hex'))}>Random</Button>
-        <ModifiableText
-          value={privateKey.toString('hex')}
-          validator={privateKeyValidator}
-          helperText="invalid private key"
-          onChange={onChange}
-        />
-      </div>
+      <Button variant="contained" color="primary" onClick={() => onChange(generatedPrivateKey().toString('hex'))}>Random</Button>
+      <ModifiableText
+        value={privateKey.toString('hex')}
+        label="Private Key (hex)"
+        validator={privateKeyValidator}
+        helperText="invalid private key"
+        onChange={onChange}
+      />
       <Typography variant="h5">Uncompressed:</Typography>
       <div style={{margin: "1%"}}>
         <Typography variant="h6">Checksum:</Typography>
@@ -215,18 +213,16 @@ WifEncodingPaper = (props) ->
 
 WifDecodingPaper = (props) ->
   { privateKeyWif, prefix, privateKey, compressed, checksum, wifValidator, onChange } = props
-  <Paper variant='outlined'>
+  <Paper>
     <Typography variant="h4">WIF Decoding</Typography>
     <div style={{margin: "1%"}}>
-      <Typography variant="h6">Private Key (WIF):</Typography>
-      <div style={{margin: "1%"}}>
-        <ModifiableText
-          value={privateKeyWif}
-          validator={wifValidator}
-          helperText="invalid private key"
-          onChange={onChange}
-        />
-      </div>
+      <ModifiableText
+        value={privateKeyWif}
+        label="Private Key (WIF)"
+        validator={wifValidator}
+        helperText="invalid private key"
+        onChange={onChange}
+      />
       <p>Prefix:&nbsp;&nbsp;<b><span class="code">{prefix.toString(16)}</span></b></p>
       <p>Key:&nbsp;&nbsp;<b><span class="code">{privateKey.toString('hex')}</span></b></p>
       <p>Compressed:&nbsp;&nbsp;<b><span class="code">{compressed.toString()}</span></b></p>
@@ -236,16 +232,14 @@ WifDecodingPaper = (props) ->
 
 WifValidatorPaper = (props) ->
   { privateKeyWif, valid, details, onChange } = props
-  <Paper variant='outlined'>
+  <Paper>
     <Typography variant="h4">WIF Validator</Typography>
     <div style={{margin: "1%"}}>
-      <Typography variant="h6">Private Key (WIF):</Typography>
-      <div style={{margin: "1%"}}>
-        <ModifiableText
-          value={privateKeyWif}
-          onChange={onChange}
-        />
-      </div>
+      <ModifiableText
+        value={privateKeyWif}
+        label="Private Key (WIF)"
+        onChange={onChange}
+      />
       <b>
       {
         if valid
