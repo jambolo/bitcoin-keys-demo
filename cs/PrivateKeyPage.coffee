@@ -11,7 +11,7 @@ import Typography from '@material-ui/core/Typography'
 
 Base58 = require "base-58"
 
-class PrivateKeyPaper extends Component
+class PrivateKeyPage extends Component
   constructor: (props) ->
     super props
     privateKey = generatedPrivateKey()

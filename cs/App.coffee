@@ -1,8 +1,8 @@
 `
 import './App.css'
-import AddressPaper from './AddressPaper'
-import PrivateKeyPaper from './PrivateKeyPaper'
-import PublicKeyPaper from './PublicKeyPaper'
+import AddressPage from './AddressPage'
+import PrivateKeyPage from './PrivateKeyPage'
+import PublicKeyPage from './PublicKeyPage'
 import TopBar from './TopBar'
 
 import React, { Component } from 'react'
@@ -11,10 +11,10 @@ import React, { Component } from 'react'
 class App extends Component
   constructor: (props) ->
     super props
-    @papers =
-      "Private Key" : <PrivateKeyPaper app={this} />
-      "Public Key" :  <PublicKeyPaper app={this} />
-      "Address" :     <AddressPaper app={this} />
+    @pages =
+      "Private Key" : <PrivateKeyPage app={this} />
+      "Public Key" :  <PublicKeyPage app={this} />
+      "Address" :     <AddressPage app={this} />
     @state =
       demo:  "Private Key"
     return
@@ -25,8 +25,8 @@ class App extends Component
 
   render: ->
     <div className="App">
-      <TopBar onChange={@selectDemo} tabs={Object.keys(@papers)} app={this} />
-      { @papers[@state.demo] }
+      <TopBar onChange={@selectDemo} tabs={Object.keys(@pages)} app={this} />
+      { @pages[@state.demo] }
     </div>
 
 export default App

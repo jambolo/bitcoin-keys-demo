@@ -12,7 +12,7 @@ import React, { Component } from 'react'
 #  width: 300px;
 #}
 
-class AddressPaper extends Component
+class AddressPage extends Component
   constructor: (props) ->
     super props
 
