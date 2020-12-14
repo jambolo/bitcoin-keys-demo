@@ -1,6 +1,6 @@
 `
-import { generatedPrivateKey, encodedWif, decodedWif, base58IsValid, hexIsValidPrivateKey, wifIsValid, checksumIsValid} from './Common'
-import { PRIVATE_KEY_SIZE, DECODED_COMPRESSED_PRIVATE_KEY_SIZE, DECODED_UNCOMPRESSED_PRIVATE_KEY_SIZE, MIN_PRIVATE_KEY, MAX_PRIVATE_KEY } from './Common'
+import { base58IsValid, checksumIsValid, decodedWif, encodedWif, generatedPrivateKey, hexIsValidPrivateKey, wifIsValid } from './Common'
+import { DECODED_COMPRESSED_PRIVATE_KEY_SIZE, DECODED_UNCOMPRESSED_PRIVATE_KEY_SIZE, MAX_PRIVATE_KEY, MIN_PRIVATE_KEY, PRIVATE_KEY_SIZE } from './Common'
 import ModifiableText from './ModifiableText'
 
 import Button from '@material-ui/core/Button'
@@ -14,12 +14,12 @@ Base58 = require "base-58"
 class PrivateKeyPage extends Component
   constructor: (props) ->
     super props
-    privateKey = generatedPrivateKey()
+    privKey = generatedPrivateKey()
     prefix = 0x80
-    [ compressedWif, compressedChecksum ] = encodedWif(prefix, privateKey, true)
-    [ uncompressedWif, uncompressedChecksum ] = encodedWif(prefix, privateKey, false)
+    [ compressedWif, compressedChecksum ] = encodedWif(privKey, true, prefix)
+    [ uncompressedWif, uncompressedChecksum ] = encodedWif(privKey, false, prefix)
     @state = {
-      privateKey
+      privKey
       compressedWif
       compressedChecksum
       uncompressedWif
@@ -38,7 +38,7 @@ class PrivateKeyPage extends Component
     valueBuf = Buffer.from(value)
     if not hexIsValidPrivateKey(valueBuf)
       @setState {
-        privateKey: null
+        privKey: null
         compressedWif: null
         compressedChecksum: null
         uncompressedWif: null
@@ -48,11 +48,11 @@ class PrivateKeyPage extends Component
       }
       return
 
-    privateKey = Buffer.from(value, 'hex')
-    [ compressedWif, compressedChecksum ] = encodedWif(0x80, privateKey, true)
-    [ uncompressedWif, uncompressedChecksum ] = encodedWif(0x80, privateKey, false)
+    privKey = Buffer.from(value, 'hex')
+    [ compressedWif, compressedChecksum ] = encodedWif(privKey, true, 0x80)
+    [ uncompressedWif, uncompressedChecksum ] = encodedWif(privKey, false, 0x80)
     @setState {
-      privateKey
+      privKey
       compressedWif
       compressedChecksum
       uncompressedWif
@@ -64,10 +64,10 @@ class PrivateKeyPage extends Component
 
   handlePrivateKeyWifChange: (value) =>
     valueBuf = Buffer.from(value)
-    [ valid, compressed, prefix, privateKey ] = decodedWif(valueBuf)
+    [ valid, privKey, compressed, check, prefix ] = decodedWif(valueBuf)
     if not valid
       @setState {
-        privateKey: null
+        privKey: null
         compressedWif: null
         compressedChecksum: null
         uncompressedWif: null
@@ -77,10 +77,10 @@ class PrivateKeyPage extends Component
       }
       return
 
-    [ compressedWif, compressedChecksum ] = encodedWif(prefix, privateKey, true)
-    [ uncompressedWif, uncompressedChecksum ] = encodedWif(prefix, privateKey, false)
+    [ compressedWif, compressedChecksum ] = encodedWif(privKey, true, prefix)
+    [ uncompressedWif, uncompressedChecksum ] = encodedWif(privKey, false, prefix)
     @setState {
-      privateKey
+      privKey
       compressedWif
       compressedChecksum
       uncompressedWif
@@ -98,7 +98,7 @@ class PrivateKeyPage extends Component
       @setState { validator: { wif: valueBuf, valid: false, details: "Invalid characters" }}
       return
 
-    work = Buffer.from(Base58.decode(valueBuf))
+    work = Buffer.from(Base58.decode(valueBuf.toString()))
 
     if work.length < DECODED_UNCOMPRESSED_PRIVATE_KEY_SIZE
       @setState { validator: { wif: valueBuf, valid: false, details: "Missing characters" }}
@@ -116,8 +116,8 @@ class PrivateKeyPage extends Component
       @setState { validator: { wif: valueBuf, valid: false, details: "Invalid prefix" }}
       return
     
-    privateKey = work[1...1 + PRIVATE_KEY_SIZE]
-    if privateKey.compare(MIN_PRIVATE_KEY) < 0 or privateKey.compare(MAX_PRIVATE_KEY) > 0
+    privKey = work[1...1 + PRIVATE_KEY_SIZE]
+    if privKey.compare(MIN_PRIVATE_KEY) < 0 or privKey.compare(MAX_PRIVATE_KEY) > 0
       @setState { validator: { wif: valueBuf, valid: false, details: "Private key is outside of the valid range" }}
       return
 
@@ -131,7 +131,7 @@ class PrivateKeyPage extends Component
   render: ->
     <div>
       <WifEncodingPaper
-        privateKey={@state.privateKey}
+        privKey={@state.privKey}
         uncompressedChecksum={@state.uncompressedChecksum}
         uncompressedWif={@state.uncompressedWif}
         compressedChecksum={@state.compressedChecksum}
@@ -140,16 +140,16 @@ class PrivateKeyPage extends Component
         onChange={@handlePrivateKeyHexChange}
       />
       <WifDecodingPaper
-        privateKeyWif={if @state.compressed then @state.compressedWif else @state.uncompressedWif}
+        wif={if @state.compressed then @state.compressedWif else @state.uncompressedWif}
         prefix={@state.prefix}
-        privateKey={@state.privateKey}
+        privKey={@state.privKey}
         compressed={@state.compressed}
         checksum={if @state.compressed then @state.compressedChecksum else @state.uncompressedChecksum}
         wifValidator={wifIsValid}
         onChange={@handlePrivateKeyWifChange}
       />
       <WifValidatorPaper
-        privateKeyWif={@state.validator.wif}
+        wif={@state.validator.wif}
         valid={@state.validator.valid}
         details={@state.validator.details}
         onChange={@handleValidatorChange}
@@ -157,14 +157,14 @@ class PrivateKeyPage extends Component
     </div>
 
 WifEncodingPaper = (props) ->
-  { privateKey, uncompressedChecksum, uncompressedWif, compressedChecksum, compressedWif, privateKeyValidator, onChange } = props
+  { privKey, uncompressedChecksum, uncompressedWif, compressedChecksum, compressedWif, privateKeyValidator, onChange } = props
 
   <Paper>
     <Typography variant="h4">WIF Encoding</Typography>
     <div style={{margin: "1%"}}>
       <Button variant="contained" color="primary" onClick={() => onChange(generatedPrivateKey().toString('hex'))}>Random</Button>
       <ModifiableText
-        value={privateKey.toString('hex')}
+        value={privKey.toString('hex')}
         label="Private Key (hex)"
         validator={privateKeyValidator}
         helperText="invalid private key"
@@ -174,7 +174,7 @@ WifEncodingPaper = (props) ->
       <div style={{margin: "1%"}}>
         <Typography variant="h6">Checksum:</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">80&nbsp;|&nbsp;{privateKey.toString('hex')}</span>
+          <span class="code">80&nbsp;|&nbsp;{privKey.toString('hex')}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           SHA-256(SHA-256())
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
@@ -182,7 +182,7 @@ WifEncodingPaper = (props) ->
         </div>
         <Typography variant="h6">WIF:</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">80&nbsp;|&nbsp;{privateKey.toString('hex')}&nbsp;|&nbsp;{uncompressedChecksum.toString('hex')}</span>
+          <span class="code">80&nbsp;|&nbsp;{privKey.toString('hex')}&nbsp;|&nbsp;{uncompressedChecksum.toString('hex')}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           Base58()
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
@@ -193,7 +193,7 @@ WifEncodingPaper = (props) ->
       <div style={{margin: "1%"}}>
         <Typography variant="h6">Checksum:</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">80&nbsp;|&nbsp;{privateKey.toString('hex')}&nbsp;|&nbsp;01</span>
+          <span class="code">80&nbsp;|&nbsp;{privKey.toString('hex')}&nbsp;|&nbsp;01</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           SHA-256(SHA-256())
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
@@ -201,7 +201,7 @@ WifEncodingPaper = (props) ->
         </div>
         <Typography variant="h6">WIF:</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code"> 80&nbsp;|&nbsp;{privateKey.toString('hex')}&nbsp;|&nbsp;01&nbsp;|&nbsp;{compressedChecksum.toString('hex')}</span>
+          <span class="code"> 80&nbsp;|&nbsp;{privKey.toString('hex')}&nbsp;|&nbsp;01&nbsp;|&nbsp;{compressedChecksum.toString('hex')}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           Base58()
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
@@ -212,31 +212,31 @@ WifEncodingPaper = (props) ->
   </Paper>
 
 WifDecodingPaper = (props) ->
-  { privateKeyWif, prefix, privateKey, compressed, checksum, wifValidator, onChange } = props
+  { wif, prefix, privKey, compressed, checksum, wifValidator, onChange } = props
   <Paper>
     <Typography variant="h4">WIF Decoding</Typography>
     <div style={{margin: "1%"}}>
       <ModifiableText
-        value={privateKeyWif}
+        value={wif}
         label="Private Key (WIF)"
         validator={wifValidator}
         helperText="invalid private key"
         onChange={onChange}
       />
-      <p>Prefix:&nbsp;&nbsp;<b><span class="code">{prefix.toString(16)}</span></b></p>
-      <p>Key:&nbsp;&nbsp;<b><span class="code">{privateKey.toString('hex')}</span></b></p>
-      <p>Compressed:&nbsp;&nbsp;<b><span class="code">{compressed.toString()}</span></b></p>
-      <p>Checksum:&nbsp;&nbsp;<b><span class="code">{checksum.toString('hex')}</span></b></p>
+      Prefix:&nbsp;&nbsp;<b><span class="code">{prefix.toString(16)}</span></b><br/>
+      Key:&nbsp;&nbsp;<b><span class="code">{privKey.toString('hex')}</span></b><br/>
+      Compressed:&nbsp;&nbsp;<b><span class="code">{compressed.toString()}</span></b><br/>
+      Checksum:&nbsp;&nbsp;<b><span class="code">{checksum.toString('hex')}</span></b><br/>
     </div>
   </Paper>
 
 WifValidatorPaper = (props) ->
-  { privateKeyWif, valid, details, onChange } = props
+  { wif, valid, details, onChange } = props
   <Paper>
     <Typography variant="h4">WIF Validator</Typography>
     <div style={{margin: "1%"}}>
       <ModifiableText
-        value={privateKeyWif}
+        value={wif}
         label="Private Key (WIF)"
         onChange={onChange}
       />
@@ -251,4 +251,4 @@ WifValidatorPaper = (props) ->
     </div>
   </Paper>
 
-export default PrivateKeyPaper
+export default PrivateKeyPage

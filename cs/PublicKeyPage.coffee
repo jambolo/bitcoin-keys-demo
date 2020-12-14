@@ -1,5 +1,5 @@
 `
-import { generatedWif, wifIsValidPrivateKey, wifIsValid, derivedPublicKey, decodedWif, hexIsValid, hexIsValidPublicKey } from './Common'
+import { decodedWif, generatedWif, hexIsValid, publicKey, wifIsValid } from './Common'
 import { COMPRESSED_PUBLIC_KEY_SIZE, UNCOMPRESSED_PUBLIC_KEY_SIZE } from './Common'
 import ModifiableText from './ModifiableText'
 
@@ -12,14 +12,14 @@ import Typography from '@material-ui/core/Typography'
 class PublicKeyPage extends Component
   constructor: (props) ->
     super props
-    privateKeyWif = generatedWif()
-    [ valid, compressed, prefix, privateKeyHex, check ] = decodedWif(privateKeyWif)
-    publicKey = derivedPublicKey(privateKeyHex, compressed)
+    wif = generatedWif()
+    [ valid, privKey, compressed ] = decodedWif(wif)
+    pubKey = publicKey(privKey, compressed)
     @state = {
-      privateKeyWif
-      privateKeyHex
+      wif
+      privKey
       compressed
-      publicKey
+      pubKey
       validator: {
         valid
         details: "Valid"
@@ -27,14 +27,14 @@ class PublicKeyPage extends Component
     }
     return
 
-  handleDerivationPrivateKeyWifChange: (value) =>
-    [ valid, compressed, prefix, privateKeyHex, check ] = decodedWif(value)
+  handleWifChange: (value) =>
+    [ valid, privKey, compressed ] = decodedWif(Buffer.from(value))
     if not valid
-      @setState { privateKeyHex: null, compressed: null, publicKey: null }
+      @setState { privKey: null, compressed: null, pubKey: null }
       return
 
-    publicKey = derivedPublicKey(privateKeyHex, compressed)
-    @setState { privateKeyHex, compressed, publicKey }
+    pubKey = publicKey(privKey, compressed)
+    @setState { privKey, compressed, pubKey }
     return
 
   handleValidatorChange: (value) =>
@@ -67,15 +67,15 @@ class PublicKeyPage extends Component
   render: () ->
     <div>
       <DerivationPaper
-        privateKeyWif={@state.privateKeyWif}
-        privateKeyHex={@state.privateKeyHex}
+        wif={@state.wif}
+        privKey={@state.privKey}
         compressed={@state.compressed}
-        publicKey={@state.publicKey}
-        privateKeyValidator={wifIsValid}
-        onChange={@handleDerivationPrivateKeyWifChange}
+        pubKey={@state.pubKey}
+        wifValidator={wifIsValid}
+        onChange={@handleWifChange}
       />
       <ValidationPaper
-        publicKey={@state.publicKey}
+        pubKey={@state.pubKey}
         valid={@state.validator.valid}
         details={@state.validator.details}
         onChange={@handleValidatorChange}
@@ -83,31 +83,31 @@ class PublicKeyPage extends Component
     </div>
 
 DerivationPaper = (props) ->
-  { privateKeyWif, privateKeyHex, compressed, publicKey, privateKeyValidator, onChange } = props
+  { wif, privKey, compressed, pubKey, wifValidator, onChange } = props
   <Paper>
     <Typography variant="h4">Derivation</Typography>
     <div style={{margin: "1%"}}>
       <Button variant="contained" color="primary" onClick={() => onChange(generatedWif())}>Random</Button>
       <ModifiableText
-        value={privateKeyWif}
-        validator={privateKeyValidator}
+        value={wif}
+        validator={wifValidator}
         label="Private Key (WIF)"
         helperText="invalid private key"
         onChange={onChange}
       />
-      Private Key (hex):&nbsp;&nbsp;<span class="code"><b>{privateKeyHex.toString("hex")}</b></span><br/>
+      Private Key (hex):&nbsp;&nbsp;<span class="code"><b>{privKey.toString("hex")}</b></span><br/>
       Compressed:&nbsp;&nbsp;<b>{compressed.toString()}</b><br/>
-      Public Key:&nbsp;&nbsp;<span class="code"><b>{publicKey.toString('hex')}</b></span>
+      Public Key:&nbsp;&nbsp;<span class="code"><b>{pubKey.toString('hex')}</b></span>
     </div>
   </Paper>
 
 ValidationPaper = (props) ->
-  { publicKey, valid, details, onChange } = props
+  { pubKey, valid, details, onChange } = props
   <Paper>
     <Typography variant="h4">Validation</Typography>
     <div style={{margin: "1%"}}>
       <ModifiableText
-        value={publicKey.toString('hex')}
+        value={pubKey.toString('hex')}
         label="Public Key (hex)"
         onChange={onChange}
       />
@@ -123,4 +123,4 @@ ValidationPaper = (props) ->
   </Paper>
 
 
-export default PublicKeyPaper
+export default PublicKeyPage

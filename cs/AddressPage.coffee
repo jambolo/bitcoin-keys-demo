@@ -1,7 +1,12 @@
 `
+import { address, generatedWif, hexIsValidPrivateKey, hexIsValidPublicKey, decodedWif, publicKey, pubkeyHash, wifIsValid } from './Common'
 
+import ModifiableText from './ModifiableText'
+
+import Button from '@material-ui/core/Button'
 import Paper from '@material-ui/core/Paper'
 import React, { Component } from 'react'
+import Typography from '@material-ui/core/Typography'
 `
 
 #.my-card-content {
@@ -16,30 +21,115 @@ class AddressPage extends Component
   constructor: (props) ->
     super props
 
-    @privateKey = ""
-    @compressed =
-      publicKey: ""
-      p2pkhAddress: ""
-      p2shAddress: ""
-      bech32Address: ""
-    @uncompressed =
-      publicKey: ""
-      p2pkhAddress: ""
-      p2shAddress: ""
-      bech32Address: ""
+    wif = generatedWif()
+    [ valid, privKey, compressed ] = decodedWif(wif)
+    pubKey = publicKey(privKey, compressed)
+    hash = pubkeyHash(pubKey)
+    prefix = 0
+    [addr, check ] = address(pubKey, prefix)
+    @state = {
+      wif
+      privateKey: privKey
+      compressed
+      publicKey: pubKey
+      pubkeyHash: hash
+      prefix
+      address: addr
+      check
+      validator: {
+        valid
+        details: "Valid"
+      }
+    }
+
+  handleWifChange: (value) ->
+    return
+
+  handlePrivateKeyChange: (value) ->
+    return
+
+  handlePublicKeyChange: (value) ->
+    return
+
+  handleValidatorChange: (value) ->
     return
 
   render: ->
-    <Paper variant="outlined">
-      Private Key : {@privateKey}<br/>
-      Compressed Public Key : {@compressed.publicKey}<br/>
-      Compressed P2PKH Address : {@compressed.p2pkhAddress}<br/>
-      Compressed P2SH Address : {@compressed.p2shAddress}<br/>
-      Compressed Bech32 Address : {@compressed.bech32Address}<br/>
-      Uncompressed Public Key : {@uncompressed.publicKey}<br/>
-      Uncompressed P2PKH Address : {@uncompressed.p2pkhAddress}<br/>
-      Uncompressed P2SH Address : {@uncompressed.p2shAddress}<br/>
-      Uncompressed Bech32 Address : {@uncompressed.bech32Address}<br/>
-    </Paper>
+    <div>
+      <DerivationPaper
+        wif={@state.wif}
+        privKey={@state.privateKey}
+        compressed={@state.compressed}
+        pubKey={@state.publicKey}
+        hash={@state.pubkeyHash}
+        prefix={@state.prefix}
+        addr={@state.address}
+        onWifChange={@handleWifChange}
+        onPrivateKeyChange={@handlePrivateKeyChange}
+        onPublicKeyChange={@handlePublicKeyChange}
+      />
+      <ValidationPaper
+        addr={@state.address}
+        valid={@state.validator.valid}
+        details={@state.validator.details}
+        onChange={@handleValidatorChange}
+      />
+    </div>
 
-export default AddressPaper
+DerivationPaper = (props) ->
+  { wif, privKey, compressed, pubKey, hash, prefix, addr, onWifChange, onPrivateKeyChange, onPublicKeyChange } = props
+  <Paper>
+    <Typography variant="h4">Derivation</Typography>
+    <div style={{margin: "1%"}}>
+      <Button variant="contained" color="primary" onClick={() => onWifChange(generatedWif())}>Random</Button>
+      <ModifiableText
+        value={wif.toString()}
+        validator={wifIsValid}
+        label="Private Key (WIF)"
+        helperText="invalid private key"
+        onChange={onWifChange}
+      />
+      <ModifiableText
+        value={privKey.toString('hex')}
+        validator={hexIsValidPrivateKey}
+        label="Private Key (hex)"
+        helperText="invalid private key"
+        onChange={onPrivateKeyChange}
+      />
+      Compressed  :&nbsp;&nbsp;<b><span class="code">{compressed.toString()}</span></b><br/>
+      <ModifiableText
+        value={pubKey.toString('hex')}
+        validator={hexIsValidPublicKey}
+        label="Public Key (hex)"
+        helperText="invalid private key"
+        onChange={onPublicKeyChange}
+      />
+      PubkeyHash  :&nbsp;&nbsp;<b><span class="code">{hash.toString('hex')}</span></b><br/>
+      Prefix      :&nbsp;&nbsp;<b><span class="code">{prefix}</span></b><br/>
+      Address     :&nbsp;&nbsp;<b><span class="code">{addr.toString()}</span></b><br/>
+    </div>
+  </Paper>
+
+ValidationPaper = (props) ->
+  { addr, valid, details, onChange } = props
+  <Paper>
+    <Typography variant="h4">Validation</Typography>
+    <div style={{margin: "1%"}}>
+      <ModifiableText
+        value={addr.toString('hex')}
+        label="Address"
+        onChange={onChange}
+      />
+      <b>
+      {
+        if valid
+          <span style={{color: "green"}}>{details}</span>
+        else
+          <span style={{color: "red"}}>{details}</span>
+      }
+      </b>
+    </div>
+  </Paper>
+
+
+export default AddressPage
