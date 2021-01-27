@@ -21,7 +21,9 @@ export COMPRESSED_PUBLIC_KEY_SIZE = 1 + PUBLIC_KEY_COORD_BITS / 8
 export UNCOMPRESSED_PUBLIC_KEY_SIZE = 1 + PUBLIC_KEY_COORD_BITS / 8 * 2
 PUBKEYHASH_BITS = 160
 PUBKEYHASH_SIZE = PUBKEYHASH_BITS / 8
-DECODED_ADDRESS_SIZE = 1 + PUBKEYHASH_SIZE + CHECKSUM_SIZE
+DECODED_BASE58_ADDRESS_SIZE = 1 + PUBKEYHASH_SIZE + CHECKSUM_SIZE
+export P2PKH_PREFIX = 0
+export P2SH_PREFIX = 5
 
 debugging = false
 debuggingIndent = 1
@@ -242,37 +244,37 @@ export pubkeyHash = (pubKey) ->
   logExitIfDebugging "pubkeyHash: returning #{hash2.toString('hex')}"
   return hash2
 
-export address = (pubKey, prefix = 0) ->
-  logEnterIfDebugging "address: (pubKey=#{pubKey.toString('hex')}, prefix=#{prefix})"
+export base58Address = (pubKey, prefix = 0) ->
+  logEnterIfDebugging "base58Address: (pubKey=#{pubKey.toString('hex')}, prefix=#{prefix})"
 
   hash = pubkeyHash(pubKey)
-  [ encoded, check ] = encodedAddress(hash, prefix)
+  [ encoded, check ] = base58EncodedAddress(hash, prefix)
 
-  logExitIfDebugging "address: returning [ #{encoded.toString()}, #{check.toString('hex')} ]"
+  logExitIfDebugging "base58Address: returning [ #{encoded.toString()}, #{check.toString('hex')} ]"
   return [ encoded, check ]
 
-encodedAddress = (hash, prefix = 0) ->
-  logEnterIfDebugging "encodedAddress: (hash=#{hash.toString('hex')}, prefix=#{prefix})"
+base58EncodedAddress = (hash, prefix = 0) ->
+  logEnterIfDebugging "base58EncodedAddress: (hash=#{hash.toString('hex')}, prefix=#{prefix})"
 
   work = Buffer.concat([ Buffer.alloc(1, prefix), hash ])
   [ encoded, check ] = base58Check(work)
 
-  logExitIfDebugging "encodedAddress: returning [ #{encoded.toString()}, #{check.toString('hex')} ]"
+  logExitIfDebugging "base58EncodedAddress: returning [ #{encoded.toString()}, #{check.toString('hex')} ]"
   return [ encoded, check ]
 
-decodedAddress = (addr) ->
-  logEnterIfDebugging "decodedAddress: (addr=#{addr.toString()})"
+decodedBase58Address = (addr) ->
+  logEnterIfDebugging "decodedBase58Address: (addr=#{addr.toString()})"
 
-  logExitIfDebugging "decodedAddress: base58IsValid(addr) returned #{base58IsValid(addr)}" if not base58IsValid(addr)
+  logExitIfDebugging "decodedBase58Address: base58IsValid(addr) returned #{base58IsValid(addr)}" if not base58IsValid(addr)
   return [ false ] if not base58IsValid(addr)
 
   work = Buffer.from(Base58.decode(addr.toString()))
-  logExitIfDebugging "decodedAddress: work.length=#{work.length}, checksumIsValid(work) returned #{checksumIsValid(work)}" if work.length != DECODED_ADDRESS_SIZE or not checksumIsValid(work)
-  return [ false ] if work.length != DECODED_ADDRESS_SIZE or not checksumIsValid(work)
+  logExitIfDebugging "decodedBase58Address: work.length=#{work.length}, checksumIsValid(work) returned #{checksumIsValid(work)}" if work.length != DECODED_BASE58_ADDRESS_SIZE or not checksumIsValid(work)
+  return [ false ] if work.length != DECODED_BASE58_ADDRESS_SIZE or not checksumIsValid(work)
 
   prefix = work[0]
   hash = work[1...1 + PUBKEYHASH_SIZE]
   check = work[-CHECKSUM_SIZE...]
 
-  logExitIfDebugging "decodedAddress: returning [ true, #{hash.toString('hex')}, #{prefix}, #{check.toString('hex')} ]"
+  logExitIfDebugging "decodedBase58Address: returning [ true, #{hash.toString('hex')}, #{prefix}, #{check.toString('hex')} ]"
   return [ true, hash, prefix, check ]

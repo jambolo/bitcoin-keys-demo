@@ -174,7 +174,7 @@ WifEncodingPaper = (props) ->
       <div style={{margin: "1%"}}>
         <Typography variant="h6">Checksum:</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">80&nbsp;|&nbsp;{privKey.toString('hex')}</span>
+          <span class="code">80&nbsp;{privKey.toString('hex')}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           SHA-256(SHA-256())
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
@@ -182,7 +182,7 @@ WifEncodingPaper = (props) ->
         </div>
         <Typography variant="h6">WIF:</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">80&nbsp;|&nbsp;{privKey.toString('hex')}&nbsp;|&nbsp;{uncompressedChecksum.toString('hex')}</span>
+          <span class="code">80&nbsp;{privKey.toString('hex')}&nbsp;{uncompressedChecksum.toString('hex')}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           Base58()
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
@@ -193,7 +193,7 @@ WifEncodingPaper = (props) ->
       <div style={{margin: "1%"}}>
         <Typography variant="h6">Checksum:</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">80&nbsp;|&nbsp;{privKey.toString('hex')}&nbsp;|&nbsp;01</span>
+          <span class="code">80&nbsp;{privKey.toString('hex')}&nbsp;01</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           SHA-256(SHA-256())
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
@@ -201,7 +201,7 @@ WifEncodingPaper = (props) ->
         </div>
         <Typography variant="h6">WIF:</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code"> 80&nbsp;|&nbsp;{privKey.toString('hex')}&nbsp;|&nbsp;01&nbsp;|&nbsp;{compressedChecksum.toString('hex')}</span>
+          <span class="code"> 80&nbsp;{privKey.toString('hex')}&nbsp;01&nbsp;{compressedChecksum.toString('hex')}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           Base58()
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
