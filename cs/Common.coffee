@@ -253,7 +253,7 @@ export base58Address = (pubKey, prefix = 0) ->
   logExitIfDebugging "base58Address: returning [ #{encoded.toString()}, #{check.toString('hex')} ]"
   return [ encoded, check ]
 
-base58EncodedAddress = (hash, prefix = 0) ->
+export base58EncodedAddress = (hash, prefix = 0) ->
   logEnterIfDebugging "base58EncodedAddress: (hash=#{hash.toString('hex')}, prefix=#{prefix})"
 
   work = Buffer.concat([ Buffer.alloc(1, prefix), hash ])
@@ -262,7 +262,7 @@ base58EncodedAddress = (hash, prefix = 0) ->
   logExitIfDebugging "base58EncodedAddress: returning [ #{encoded.toString()}, #{check.toString('hex')} ]"
   return [ encoded, check ]
 
-decodedBase58Address = (addr) ->
+export decodedBase58Address = (addr) ->
   logEnterIfDebugging "decodedBase58Address: (addr=#{addr.toString()})"
 
   logExitIfDebugging "decodedBase58Address: base58IsValid(addr) returned #{base58IsValid(addr)}" if not base58IsValid(addr)

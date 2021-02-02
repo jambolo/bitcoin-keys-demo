@@ -1,5 +1,5 @@
 `
-import { base58Address, generatedWif, hexIsValidPrivateKey, hexIsValidPublicKey, encodedWif, decodedWif, publicKey, pubkeyHash, wifIsValid } from './Common'
+import { base58Address, generatedWif, hexIsValidPrivateKey, hexIsValidPublicKey, encodedWif, decodedWif, publicKey, pubkeyHash, wifIsValid, decodedBase58Address } from './Common'
 import { P2PKH_PREFIX, P2SH_PREFIX } from './Common'
 import ModifiableText from './ModifiableText'
 
@@ -39,6 +39,10 @@ class AddressPage extends Component
       p2pkh
       p2sh
       validator: {
+        address: p2pkh.address
+        prefix: P2PKH_PREFIX
+        pubKeyHash: hash
+        check: p2pkh.check
         valid
         details: "Valid"
       }
@@ -61,8 +65,12 @@ class AddressPage extends Component
           check: null
           address: null
         validator:
+          address: null
+          prefix: null
+          pubKeyHash: null
+          check: null
           valid: false
-          details: "Invalid private key"
+          details: null
       }
       return
 
@@ -82,6 +90,10 @@ class AddressPage extends Component
       p2pkh
       p2sh
       validator:
+        address: p2pkh.address
+        prefix: P2PKH_PREFIX
+        pubKeyHash: hash
+        check: p2pkh.check
         valid: true
         details: "Valid"
     }
@@ -103,8 +115,12 @@ class AddressPage extends Component
           check: null
           address: null
         validator:
+          address: null
+          prefix: null
+          pubKeyHash: null
+          check: null
           valid: false
-          details: "Invalid private key"
+          details: null
       }
       return
 
@@ -128,6 +144,10 @@ class AddressPage extends Component
       p2pkh
       p2sh
       validator:
+        address: p2pkh.address
+        prefix: P2PKH_PREFIX
+        pubKeyHash: hash
+        check: p2pkh.check
         valid: true
         details: "Valid"
     }
@@ -137,6 +157,29 @@ class AddressPage extends Component
     return
 
   handleValidatorChange: (value) =>
+    valueBuf = Buffer.from(value)
+    [valid, hash, prefix, check] = decodedBase58Address(valueBuf)
+    if not valid
+      @setState {
+        validator:
+          address: valueBuf
+          prefix: null
+          pubKeyHash: null
+          check: null
+          valid: false
+          details: "Invalid"
+      }
+    else
+      @setState {
+        validator: {
+          address: valueBuf
+          prefix
+          pubKeyHash: hash
+          check
+          valid: true
+          details: "Valid"
+        }
+      }
     return
 
   render: ->
@@ -154,7 +197,10 @@ class AddressPage extends Component
         onPublicKeyChange={@handlePublicKeyChange}
       />
       <ValidationPaper
-        address={@state.p2pkh.address}
+        address={@state.validator.address}
+        prefix={@state.validator.prefix}
+        pubKeyHash={@state.validator.pubKeyHash}
+        check={@state.validator.check}
         valid={@state.validator.valid}
         details={@state.validator.details}
         onChange={@handleValidatorChange}
@@ -189,7 +235,7 @@ DerivationPaper = (props) ->
         helperText="invalid private key"
         onChange={onPublicKeyChange}
       />
-      PubkeyHash:&nbsp;&nbsp;<b><span class="code"></span>{hash.toString('hex')}</b><br/>
+      PubkeyHash:&nbsp;&nbsp;<b><span class="code">{hash.toString('hex')}</span></b><br/>
       <br/>
       <Typography variant="h5">P2PKH</Typography>
       <div style={{margin: "1%"}}>
@@ -236,7 +282,7 @@ DerivationPaper = (props) ->
   </Paper>
 
 ValidationPaper = (props) ->
-  { address, valid, details, onChange } = props
+  { address, prefix, pubKeyHash, check, valid, details, onChange } = props
   <Paper>
     <Typography variant="h4">Validation</Typography>
     <div style={{margin: "1%"}}>
@@ -245,16 +291,18 @@ ValidationPaper = (props) ->
         label="Address"
         onChange={onChange}
       />
-      <b>
+      Prefix:&nbsp;&nbsp;<b><span class="code">{prefix.toString(16)}</span></b><br/>
+      PubKeyHash:&nbsp;&nbsp;<b><span class="code">{pubKeyHash.toString('hex')}</span></b><br/>
+      Check:&nbsp;&nbsp;<b><span class="code">{check.toString('hex')}</span></b>
+      <br/>
+      <br/>
       {
         if valid
-          <span style={{color: "green"}}>{details}</span>
+          <b><span style={{color: "green"}}>{details}</span></b>
         else
-          <span style={{color: "red"}}>{details}</span>
+          <b><span style={{color: "red"}}>{details}</span></b>
       }
-      </b>
     </div>
   </Paper>
-
 
 export default AddressPage
