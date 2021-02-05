@@ -1,6 +1,8 @@
 `
-import { base58Address, generatedWif, hexIsValidPrivateKey, hexIsValidPublicKey, encodedWif, decodedWif, publicKey, pubkeyHash, wifIsValid, decodedBase58Address } from './Common'
-import { P2PKH_PREFIX, P2SH_PREFIX } from './Common'
+import { base58IsValid, checksumIsValid, hexIsValidPrivateKey, hexIsValidPublicKey, hexIsValidPubkeyHash } from './Common'
+import { addressIsValid, wifIsValid, base58Address, generatedWif, encodedWif, decodedWif, publicKey } from './Common'
+import { base58EncodedAddress, pubKeyHash, decodedBase58Address, addressTypeName } from './Common'
+import { P2PKH_PREFIX, P2SH_PREFIX, DECODED_BASE58_ADDRESS_SIZE } from './Common'
 import ModifiableText from './ModifiableText'
 
 import Button from '@material-ui/core/Button'
@@ -8,6 +10,8 @@ import Paper from '@material-ui/core/Paper'
 import React, { Component } from 'react'
 import Typography from '@material-ui/core/Typography'
 `
+
+Base58 = require "base-58"
 
 #.my-card-content {
 #  padding: 16px;
@@ -24,7 +28,7 @@ class AddressPage extends Component
     wif = generatedWif()
     [ valid, privKey, compressed ] = decodedWif(wif)
     pubKey = publicKey(privKey, compressed)
-    hash = pubkeyHash(pubKey)
+    hash = pubKeyHash(pubKey)
     p2pkh = {}
     [ p2pkh.address, p2pkh.check ] = base58Address(pubKey, P2PKH_PREFIX)
     p2sh = {}
@@ -35,14 +39,13 @@ class AddressPage extends Component
       privateKey: privKey
       compressed
       publicKey: pubKey
-      pubkeyHash: hash
+      pubKeyHash: hash
       p2pkh
       p2sh
+      decoder:
+        check: p2pkh.check
       validator: {
         address: p2pkh.address
-        prefix: P2PKH_PREFIX
-        pubKeyHash: hash
-        check: p2pkh.check
         valid
         details: "Valid"
       }
@@ -57,25 +60,24 @@ class AddressPage extends Component
         privateKey: null
         compressed: null
         publicKey: null
-        pubkeyHash: null
+        pubKeyHash: null
         p2pkh:
           check: null
           address: null
         p2sh:
           check: null
           address: null
+        decoder:
+          check: null
         validator:
           address: null
-          prefix: null
-          pubKeyHash: null
-          check: null
           valid: false
           details: null
       }
       return
 
     pubKey = publicKey(privKey, compressed)
-    hash = pubkeyHash(pubKey)
+    hash = pubKeyHash(pubKey)
     p2pkh = {}
     [ p2pkh.address, p2pkh.check ] = base58Address(pubKey, P2PKH_PREFIX)
     p2sh = {}
@@ -86,14 +88,13 @@ class AddressPage extends Component
       privateKey: privKey
       compressed
       publicKey: pubKey
-      pubkeyHash: hash
+      pubKeyHash: hash
       p2pkh
       p2sh
+      decoder:
+        check: p2pkh.check
       validator:
         address: p2pkh.address
-        prefix: P2PKH_PREFIX
-        pubKeyHash: hash
-        check: p2pkh.check
         valid: true
         details: "Valid"
     }
@@ -104,21 +105,20 @@ class AddressPage extends Component
     if not hexIsValidPrivateKey(valueBuf)
       @setState {
         wif: null
-        privateKey: valueBuf
+        privateKey: null
         compressed: null
         publicKey: null
-        pubkeyHash: null
+        pubKeyHash: null
         p2pkh:
           check: null
           address: null
         p2sh:
           check: null
           address: null
+        decoder:
+          check: null
         validator:
           address: null
-          prefix: null
-          pubKeyHash: null
-          check: null
           valid: false
           details: null
       }
@@ -127,7 +127,7 @@ class AddressPage extends Component
     privKey = Buffer.from(value, 'hex')
     [ compressedWif ] = encodedWif(privKey, true, 0x80)
     pubKey = publicKey(privKey, true)
-    hash = pubkeyHash(pubKey)
+    hash = pubKeyHash(pubKey)
     p2pkh = {}
     p2pkh.prefix = P2PKH_PREFIX
     [ p2pkh.address, p2pkh.check ] = base58Address(pubKey, P2PKH_PREFIX)
@@ -140,46 +140,143 @@ class AddressPage extends Component
       privateKey: privKey
       compressed: true
       publicKey: pubKey
-      pubkeyHash: hash
+      pubKeyHash: hash
       p2pkh
       p2sh
+      decoder:
+        check: p2pkh.check
       validator:
         address: p2pkh.address
-        prefix: P2PKH_PREFIX
-        pubKeyHash: hash
-        check: p2pkh.check
         valid: true
         details: "Valid"
     }
     return
 
   handlePublicKeyChange: (value) =>
+    valueBuf = Buffer.from(value)
+    if not hexIsValidPublicKey(valueBuf)
+      @setState {
+        wif: null
+        privateKey: null
+        compressed: null
+        publicKey: null
+        pubKeyHash: null
+        p2pkh:
+          check: null
+          address: null
+        p2sh:
+          check: null
+          address: null
+        decoder:
+          check: null
+        validator:
+          address: null
+          valid: false
+          details: null
+      }
+      return
+
+    pubKey = Buffer.from(value, 'hex')
+    hash = pubKeyHash(pubKey)
+    p2pkh = {}
+    p2pkh.prefix = P2PKH_PREFIX
+    [ p2pkh.address, p2pkh.check ] = base58Address(pubKey, P2PKH_PREFIX)
+    p2sh = {}
+    p2sh.prefix = P2SH_PREFIX
+    [ p2sh.address, p2sh.check ] = base58Address(pubKey, P2SH_PREFIX)
+
+    @setState {
+      wif: null
+      privateKey: null
+      compressed: null
+      publicKey: pubKey
+      pubKeyHash: hash
+      p2pkh
+      p2sh
+      decoder:
+        check: p2pkh.check
+      validator:
+        address: p2pkh.address
+        valid: true
+        details: "Valid"
+    }
+    return
+
+  handlePubKeyHashChange: (value) =>
+    valueBuf = Buffer.from(value)
+    if not hexIsValidPubkeyHash(valueBuf)
+      @setState {
+        wif: null
+        privateKey: null
+        compressed: null
+        publicKey: null
+        pubKeyHash: null
+        p2pkh:
+          check: null
+          address: null
+        p2sh:
+          check: null
+          address: null
+        decoder:
+          check: null
+        validator:
+          address: null
+          valid: false
+          details: null
+      }
+      return
+
+    hash = Buffer.from(value, 'hex')
+    p2pkh = {}
+    p2pkh.prefix = P2PKH_PREFIX
+    [ p2pkh.address, p2pkh.check ] = base58EncodedAddress(hash, P2PKH_PREFIX)
+    p2sh = {}
+    p2sh.prefix = P2SH_PREFIX
+    [ p2sh.address, p2sh.check ] = base58EncodedAddress(hash, P2SH_PREFIX)
+
+    @setState {
+      wif: null
+      privateKey: null
+      compressed: null
+      publicKey: null
+      pubKeyHash: hash
+      p2pkh
+      p2sh
+      decoder:
+        check: p2pkh.check
+      validator:
+        address: p2pkh.address
+        valid: true
+        details: "Valid"
+    }
     return
 
   handleValidatorChange: (value) =>
     valueBuf = Buffer.from(value)
-    [valid, hash, prefix, check] = decodedBase58Address(valueBuf)
-    if not valid
-      @setState {
-        validator:
-          address: valueBuf
-          prefix: null
-          pubKeyHash: null
-          check: null
-          valid: false
-          details: "Invalid"
-      }
-    else
-      @setState {
-        validator: {
-          address: valueBuf
-          prefix
-          pubKeyHash: hash
-          check
-          valid: true
-          details: "Valid"
-        }
-      }
+    # Check characters before attempting to decode
+    if not base58IsValid(valueBuf)
+      @setState { validator: { address: valueBuf, valid: false, details: "Invalid characters" }}
+      return
+
+    work = Buffer.from(Base58.decode(value))
+
+    if work.length < DECODED_BASE58_ADDRESS_SIZE
+      @setState { validator: { address: valueBuf, valid: false, details: "Missing characters" }}
+      return
+
+    if work.length > DECODED_BASE58_ADDRESS_SIZE
+      @setState { validator: { address: valueBuf, valid: false, details: "Extra characters" }}
+      return
+
+    if not checksumIsValid(work)
+      @setState { validator: { address: valueBuf, valid: false, details: "Checksum mismatch" }}
+      return
+    
+    if addressTypeName(work[0]) is null
+      @setState { validator: { address: valueBuf, valid: false, details: "Invalid prefix" }}
+      return
+    
+    @setState { validator: { wif: valueBuf, valid: true, details: "Valid" }}
     return
 
   render: ->
@@ -189,18 +286,16 @@ class AddressPage extends Component
         privKey={@state.privateKey}
         compressed={@state.compressed}
         pubKey={@state.publicKey}
-        hash={@state.pubkeyHash}
+        hash={@state.pubKeyHash}
         p2pkh={@state.p2pkh}
         p2sh={@state.p2sh}
         onWifChange={@handleWifChange}
         onPrivateKeyChange={@handlePrivateKeyChange}
         onPublicKeyChange={@handlePublicKeyChange}
+        onPubKeyHashChange={@handlePubKeyHashChange}
       />
       <ValidationPaper
         address={@state.validator.address}
-        prefix={@state.validator.prefix}
-        pubKeyHash={@state.validator.pubKeyHash}
-        check={@state.validator.check}
         valid={@state.validator.valid}
         details={@state.validator.details}
         onChange={@handleValidatorChange}
@@ -208,71 +303,77 @@ class AddressPage extends Component
     </div>
 
 DerivationPaper = (props) ->
-  { wif, privKey, compressed, pubKey, hash, p2pkh, p2sh, onWifChange, onPrivateKeyChange, onPublicKeyChange } = props
+  { wif, privKey, compressed, pubKey, hash, p2pkh, p2sh, onWifChange, onPrivateKeyChange, onPublicKeyChange, onPubKeyHashChange } = props
   <Paper>
     <Typography variant="h4">Derivation</Typography>
     <div style={{margin: "1%"}}>
       <Button variant="contained" color="primary" onClick={() => onWifChange(generatedWif())}>Random</Button>
       <ModifiableText
-        value={wif.toString()}
+        value={if wif? then wif.toString() else ''}
         validator={wifIsValid}
         label="Private Key (WIF)"
         helperText="invalid private key"
         onChange={onWifChange}
       />
       <ModifiableText
-        value={privKey.toString('hex')}
+        value={if privKey? then privKey.toString('hex') else ''}
         validator={hexIsValidPrivateKey}
         label="Private Key (hex)"
         helperText="invalid private key"
         onChange={onPrivateKeyChange}
       />
-      Compressed  :&nbsp;&nbsp;<b><span class="code">{compressed.toString()}</span></b><br/>
+      Compressed  :&nbsp;&nbsp;<b><span class="code">{if compressed? then compressed.toString() else ''}</span></b><br/>
       <ModifiableText
-        value={pubKey.toString('hex')}
+        value={if pubKey? then pubKey.toString('hex') else ''}
         validator={hexIsValidPublicKey}
         label="Public Key (hex)"
         helperText="invalid private key"
         onChange={onPublicKeyChange}
       />
-      PubkeyHash:&nbsp;&nbsp;<b><span class="code">{hash.toString('hex')}</span></b><br/>
+      <ModifiableText
+        value={if hash? then hash.toString('hex') else ''}
+        validator={hexIsValidPubkeyHash}
+        label="PubKeyHash"
+        helperText="invalid pubkey hash"
+        onChange={onPubKeyHashChange}
+      />
       <br/>
       <Typography variant="h5">P2PKH</Typography>
       <div style={{margin: "1%"}}>
         <Typography variant="h6">Checksum</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">00&nbsp;{hash.toString('hex')}</span>
+          <span class="code">00&nbsp;{if hash? then hash.toString('hex') else ''}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           SHA-256(SHA-256())
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
-          <b><span class="code">{p2pkh.check.toString('hex')}</span></b>
+          <b><span class="code">{if p2pkh? then p2pkh.check.toString('hex') else ''}</span></b>
         </div>
         <Typography variant="h6">Address</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">00&nbsp;{hash.toString('hex')}&nbsp;{p2pkh.check.toString('hex')}</span>
+          <span class="code">00&nbsp;{if hash? then hash.toString('hex') else ''}&nbsp;{if p2pkh? then p2pkh.check.toString('hex') else ''}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           Base58()
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
-          <b><span class="code">{p2pkh.address.toString()}</span></b>
+          <b><span class="code">{if p2pkh? then p2pkh.address.toString() else ''}</span></b>
         </div>
       </div>
       <Typography variant="h5">P2SH</Typography>
       <div style={{margin: "1%"}}>
         <Typography variant="h6">Checksum</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">05&nbsp;{hash.toString('hex')}</span>
+          <span class="code">05&nbsp;{if hash? then hash.toString('hex') else ''}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           SHA-256(SHA-256())
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
-          <b><span class="code">{p2sh.check.toString('hex')}</span></b>
+          <b><span class="code">{if p2sh? then p2sh.check.toString('hex')else ''}</span></b>
         </div>
         <Typography variant="h6">Address</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">05&nbsp;{hash.toString('hex')}&nbsp;{p2sh.check.toString('hex')}</span>
+          <span class="code">05&nbsp;{if hash? then hash.toString('hex') else ''}&nbsp;{if p2sh? then p2sh.check.toString('hex') else ''}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           Base58()
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
-          <b><span class="code">{p2sh.address.toString()}</span></b>
+          <b><span class="code">{if p2sh? then p2sh.address.toString() else ''}</span></b>
         </div>
       </div>
       <Typography variant="h5">Bech32</Typography>
@@ -281,8 +382,27 @@ DerivationPaper = (props) ->
     </div>
   </Paper>
 
+#DecodingPaper = (props) ->
+#  { address, prefix, hash, checksum, validator, onChange } = props
+#  <Paper>
+#    <Typography variant="h4">Decoding</Typography>
+#    <div style={{margin: "1%"}}>
+#      <ModifiableText
+#        value={address}
+#        label="Address"
+#        validator={validator}
+#        helperText="invalid address"
+#        onChange={onChange}
+#      />
+#      Prefix:&nbsp;&nbsp;<b><span class="code">{prefix.toString(16)} ({addressTypeName(prefix)})</span></b><br/>
+#      PubKeyHash:&nbsp;&nbsp;<b><span class="code">{hash.toString('hex'}</span></b><br/>
+#      Checksum:&nbsp;&nbsp;<b><span class="code">{checksum.toString('hex')}</span></b><br/>
+#    </div>
+#  </Paper>
+
+
 ValidationPaper = (props) ->
-  { address, prefix, pubKeyHash, check, valid, details, onChange } = props
+  { address, valid, details, onChange } = props
   <Paper>
     <Typography variant="h4">Validation</Typography>
     <div style={{margin: "1%"}}>
@@ -291,17 +411,14 @@ ValidationPaper = (props) ->
         label="Address"
         onChange={onChange}
       />
-      Prefix:&nbsp;&nbsp;<b><span class="code">{prefix.toString(16)}</span></b><br/>
-      PubKeyHash:&nbsp;&nbsp;<b><span class="code">{pubKeyHash.toString('hex')}</span></b><br/>
-      Check:&nbsp;&nbsp;<b><span class="code">{check.toString('hex')}</span></b>
-      <br/>
-      <br/>
+      <b>
       {
         if valid
-          <b><span style={{color: "green"}}>{details}</span></b>
+          <span style={{color: "green"}}>{if details? then details else ''}</span>
         else
-          <b><span style={{color: "red"}}>{details}</span></b>
+          <span style={{color: "red"}}>{if details? then details else ''}</span>
       }
+      </b>
     </div>
   </Paper>
 

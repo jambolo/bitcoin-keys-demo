@@ -21,7 +21,7 @@ export COMPRESSED_PUBLIC_KEY_SIZE = 1 + PUBLIC_KEY_COORD_BITS / 8
 export UNCOMPRESSED_PUBLIC_KEY_SIZE = 1 + PUBLIC_KEY_COORD_BITS / 8 * 2
 PUBKEYHASH_BITS = 160
 PUBKEYHASH_SIZE = PUBKEYHASH_BITS / 8
-DECODED_BASE58_ADDRESS_SIZE = 1 + PUBKEYHASH_SIZE + CHECKSUM_SIZE
+export DECODED_BASE58_ADDRESS_SIZE = 1 + PUBKEYHASH_SIZE + CHECKSUM_SIZE
 export P2PKH_PREFIX = 0
 export P2SH_PREFIX = 5
 
@@ -131,16 +131,16 @@ export hexIsValidPublicKey = (hex) ->
   logExitIfDebugging "hexIsValidPublicKey: returning #{valid.toString()}"
   return valid
 
-pubkeyHashIsValid = (hash) ->
-  logEnterIfDebugging "pubkeyHashIsValid: (hash=#{hash.toString('hex')})"
+pubKeyHashIsValid = (hash) ->
+  logEnterIfDebugging "pubKeyHashIsValid: (hash=#{hash.toString('hex')})"
 
-  logExitIfDebugging "pubkeyHashIsValid: hash.length=#{}{hash.length}" if hash.length != PUBKEYHASH_SIZE
+  logExitIfDebugging "pubKeyHashIsValid: hash.length=#{}{hash.length}" if hash.length != PUBKEYHASH_SIZE
   return false if hash.length != PUBKEYHASH_SIZE
 
-  logExitIfDebugging "pubkeyHashIsValid: returning true"
+  logExitIfDebugging "pubKeyHashIsValid: returning true"
   return true
 
-hexIsValidPubkeyHash = (hex) ->
+export hexIsValidPubkeyHash = (hex) ->
   logEnterIfDebugging "hexIsValidPubkeyHash: (hex=#{hex.toString()})"
 
   logExitIfDebugging "hexIsValidPubkeyHash: hexIsValid returned #{hexIsValid(hex)}" if not hexIsValid(hex) 
@@ -150,7 +150,7 @@ hexIsValidPubkeyHash = (hex) ->
   return false if hex.length != PUBKEYHASH_SIZE * 2 
 
   hash = Buffer.from(hex.toString(), 'hex')
-  valid = pubkeyHashIsValid(hash)
+  valid = pubKeyHashIsValid(hash)
 
   logExitIfDebugging "hexIsValidPubkeyHash: returning #{valid.toString()}"
   return valid
@@ -235,19 +235,19 @@ export publicKey = (privKey, compressed) ->
   logExitIfDebugging "publicKey: returning #{key.toString("hex")}"
   return key
 
-export pubkeyHash = (pubKey) ->
+export pubKeyHash = (pubKey) ->
   logEnterIfDebugging "pubKey: (pubKey=#{pubKey.toString('hex')})"
 
   hash1 = Crypto.createHash('sha256').update(pubKey).digest()
   hash2 = Crypto.createHash('ripemd160').update(hash1).digest()
   
-  logExitIfDebugging "pubkeyHash: returning #{hash2.toString('hex')}"
+  logExitIfDebugging "pubKeyHash: returning #{hash2.toString('hex')}"
   return hash2
 
 export base58Address = (pubKey, prefix = 0) ->
   logEnterIfDebugging "base58Address: (pubKey=#{pubKey.toString('hex')}, prefix=#{prefix})"
 
-  hash = pubkeyHash(pubKey)
+  hash = pubKeyHash(pubKey)
   [ encoded, check ] = base58EncodedAddress(hash, prefix)
 
   logExitIfDebugging "base58Address: returning [ #{encoded.toString()}, #{check.toString('hex')} ]"
@@ -278,3 +278,21 @@ export decodedBase58Address = (addr) ->
 
   logExitIfDebugging "decodedBase58Address: returning [ true, #{hash.toString('hex')}, #{prefix}, #{check.toString('hex')} ]"
   return [ true, hash, prefix, check ]
+
+export addressTypeName = (prefix) ->
+  if prefix is 0x00
+    'Bitcoin P2PKH'
+  else if prefix is 0x05
+    'Bitcoin P2SH'
+#  else if prefix is 0xff
+#    'Litecoin P2PKH'
+#  else if prefix is 0xff
+#    'Litecoin P2SH'
+  else if prefix is 0x1e
+    'Dogecoin'
+  else
+    null
+
+export addressIsValid = (addr) ->
+  [valid] = decodedBase58Address(addr)
+  return valid
