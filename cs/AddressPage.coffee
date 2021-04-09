@@ -43,6 +43,7 @@ class AddressPage extends Component
       p2pkh
       p2sh
       decoder:
+        prefix: p2pkh.prefix
         check: p2pkh.check
       validator: {
         address: p2pkh.address
@@ -68,6 +69,7 @@ class AddressPage extends Component
           check: null
           address: null
         decoder:
+          prefix: null
           check: null
         validator:
           address: null
@@ -92,6 +94,7 @@ class AddressPage extends Component
       p2pkh
       p2sh
       decoder:
+        prefix: p2pkh.prefix
         check: p2pkh.check
       validator:
         address: p2pkh.address
@@ -116,6 +119,7 @@ class AddressPage extends Component
           check: null
           address: null
         decoder:
+          prefix: null
           check: null
         validator:
           address: null
@@ -144,6 +148,7 @@ class AddressPage extends Component
       p2pkh
       p2sh
       decoder:
+        prefix: p2pkh.prefix
         check: p2pkh.check
       validator:
         address: p2pkh.address
@@ -168,6 +173,7 @@ class AddressPage extends Component
           check: null
           address: null
         decoder:
+          prefix: null
           check: null
         validator:
           address: null
@@ -194,6 +200,7 @@ class AddressPage extends Component
       p2pkh
       p2sh
       decoder:
+        prefix: p2pkh.prefix
         check: p2pkh.check
       validator:
         address: p2pkh.address
@@ -218,6 +225,7 @@ class AddressPage extends Component
           check: null
           address: null
         decoder:
+          prefix: null
           check: null
         validator:
           address: null
@@ -225,7 +233,6 @@ class AddressPage extends Component
           details: null
       }
       return
-
     hash = Buffer.from(value, 'hex')
     p2pkh = {}
     p2pkh.prefix = P2PKH_PREFIX
@@ -233,7 +240,6 @@ class AddressPage extends Component
     p2sh = {}
     p2sh.prefix = P2SH_PREFIX
     [ p2sh.address, p2sh.check ] = base58EncodedAddress(hash, P2SH_PREFIX)
-
     @setState {
       wif: null
       privateKey: null
@@ -243,9 +249,58 @@ class AddressPage extends Component
       p2pkh
       p2sh
       decoder:
+        prefix: p2pkh.prefix
         check: p2pkh.check
       validator:
         address: p2pkh.address
+        valid: true
+        details: "Valid"
+    }
+    return
+
+  handleDecoderChange: (value) =>
+    valueBuf = Buffer.from(value)
+    [valid, hash, prefix, check ] = decodedBase58Address(valueBuf)
+
+    if not valid
+      @setState {
+        wif: null
+        privateKey: null
+        compressed: null
+        publicKey: null
+        pubKeyHash: null
+        p2pkh:
+          check: null
+          address: null
+        p2sh:
+          check: null
+          address: null
+        decoder:
+          prefix: null
+          check: null
+        validator:
+          address: null
+          valid: false
+          details: null
+      }
+      return
+    @setState {
+      wif: null
+      privateKey: null
+      compressed: null
+      publicKey: null
+      pubKeyHash: hash
+      p2pkh:
+        check: null
+        address: null
+      p2sh:
+        check: null
+        address: null
+      decoder:
+        prefix: prefix
+        check: check
+      validator:
+        address: valueBuf
         valid: true
         details: "Valid"
     }
@@ -293,6 +348,13 @@ class AddressPage extends Component
         onPrivateKeyChange={@handlePrivateKeyChange}
         onPublicKeyChange={@handlePublicKeyChange}
         onPubKeyHashChange={@handlePubKeyHashChange}
+      />
+      <DecodingPaper
+        address={@state.decoder.address}
+        prefix={@state.prefix}
+        hash={@state.pubKeyHash}
+        check={@state.decoder.check}
+        onChange={@handleDecoderChange}
       />
       <ValidationPaper
         address={@state.validator.address}
@@ -382,23 +444,23 @@ DerivationPaper = (props) ->
     </div>
   </Paper>
 
-#DecodingPaper = (props) ->
-#  { address, prefix, hash, checksum, validator, onChange } = props
-#  <Paper>
-#    <Typography variant="h4">Decoding</Typography>
-#    <div style={{margin: "1%"}}>
-#      <ModifiableText
-#        value={address}
-#        label="Address"
-#        validator={validator}
-#        helperText="invalid address"
-#        onChange={onChange}
-#      />
-#      Prefix:&nbsp;&nbsp;<b><span class="code">{prefix.toString(16)} ({addressTypeName(prefix)})</span></b><br/>
-#      PubKeyHash:&nbsp;&nbsp;<b><span class="code">{hash.toString('hex'}</span></b><br/>
-#      Checksum:&nbsp;&nbsp;<b><span class="code">{checksum.toString('hex')}</span></b><br/>
-#    </div>
-#  </Paper>
+DecodingPaper = (props) ->
+  { address, prefix, hash, check, onChange } = props
+  <Paper>
+    <Typography variant="h4">Decoding</Typography>
+    <div style={{margin: "1%"}}>
+      <ModifiableText
+        value={address}
+        label="Address"
+        validator={addressIsValid}
+        helperText="invalid address"
+        onChange={onChange}
+      />
+      Prefix:&nbsp;&nbsp;<b><span class="code">{if prefix? then prefix.toString(16) else ''} ({if prefix? then addressTypeName(prefix)} else '')</span></b><br/>
+      PubKeyHash:&nbsp;&nbsp;<b><span class="code">{if hash? then hash.toString('hex') else ''}</span></b><br/>
+      Checksum:&nbsp;&nbsp;<b><span class="code">{if check? then check.toString('hex') else ''}</span></b><br/>
+    </div>
+  </Paper>
 
 
 ValidationPaper = (props) ->
