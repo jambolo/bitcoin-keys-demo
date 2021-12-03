@@ -326,11 +326,11 @@ class AddressPage extends Component
     if not checksumIsValid(work)
       @setState { validator: { address: valueBuf, valid: false, details: "Checksum mismatch" }}
       return
-    
+
     if addressTypeName(work[0]) is null
       @setState { validator: { address: valueBuf, valid: false, details: "Invalid prefix" }}
       return
-    
+
     @setState { validator: { wif: valueBuf, valid: true, details: "Valid" }}
     return
 
