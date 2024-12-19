@@ -15,6 +15,7 @@ class ModifiableText extends Component
 
   handleChange: (event) =>
     @setState { value: event.target.value }
+    @props.onChange event.target.value
     return
 
   handleKeyDown: (event) =>
@@ -30,12 +31,13 @@ class ModifiableText extends Component
     valid = not @props.validator? or @props.validator(@state.value)
     <div>
       <ValidatedTextField
-        value={@state.value}
+        value={@props.value}
         label={@props.label}
         valid={valid}
         helperText={@props.helperText}
         onChange={@handleChange}
-        onKeydown={@handleKeyDown} />
+        onKeydown={@handleKeyDown}
+      />
       {
         if valid
           <IconButton color="primary" aria-label="update" onClick={@handleClick} ><RefreshIcon /></IconButton>
