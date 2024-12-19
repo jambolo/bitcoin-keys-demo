@@ -174,15 +174,15 @@ WifEncodingPaper = (props) ->
       <div style={{margin: "1%"}}>
         <Typography variant="h6">Checksum:</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">80&nbsp;{privKey.toString('hex')}</span>
+          <span className="code">80&nbsp;{privKey.toString('hex')}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           SHA-256(SHA-256())
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
-          <span class="code"><b>{uncompressedChecksum.toString('hex')}</b></span>
+          <span className="code"><b>{uncompressedChecksum.toString('hex')}</b></span>
         </div>
         <Typography variant="h6">WIF:</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">80&nbsp;{privKey.toString('hex')}&nbsp;{uncompressedChecksum.toString('hex')}</span>
+          <span className="code">80&nbsp;{privKey.toString('hex')}&nbsp;{uncompressedChecksum.toString('hex')}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           Base58()
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
@@ -193,15 +193,15 @@ WifEncodingPaper = (props) ->
       <div style={{margin: "1%"}}>
         <Typography variant="h6">Checksum:</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code">80&nbsp;{privKey.toString('hex')}&nbsp;01</span>
+          <span className="code">80&nbsp;{privKey.toString('hex')}&nbsp;01</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           SHA-256(SHA-256())
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
-          <span class="code"><b>{compressedChecksum.toString('hex')}</b></span>
+          <span className="code"><b>{compressedChecksum.toString('hex')}</b></span>
         </div>
         <Typography variant="h6">WIF:</Typography>
         <div style={{margin: "1%"}}>
-          <span class="code"> 80&nbsp;{privKey.toString('hex')}&nbsp;01&nbsp;{compressedChecksum.toString('hex')}</span>
+          <span className="code"> 80&nbsp;{privKey.toString('hex')}&nbsp;01&nbsp;{compressedChecksum.toString('hex')}</span>
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
           Base58()
           &nbsp;&nbsp;⟹&nbsp;&nbsp;
@@ -223,10 +223,10 @@ WifDecodingPaper = (props) ->
         helperText="invalid private key"
         onChange={onChange}
       />
-      Prefix:&nbsp;&nbsp;<b><span class="code">{prefix.toString(16)}</span></b><br/>
-      Key:&nbsp;&nbsp;<b><span class="code">{privKey.toString('hex')}</span></b><br/>
-      Compressed:&nbsp;&nbsp;<b><span class="code">{compressed.toString()}</span></b><br/>
-      Checksum:&nbsp;&nbsp;<b><span class="code">{checksum.toString('hex')}</span></b><br/>
+      Prefix:&nbsp;&nbsp;<b><span className="code">{prefix.toString(16)}</span></b><br/>
+      Key:&nbsp;&nbsp;<b><span className="code">{privKey.toString('hex')}</span></b><br/>
+      Compressed:&nbsp;&nbsp;<b><span className="code">{compressed.toString()}</span></b><br/>
+      Checksum:&nbsp;&nbsp;<b><span className="code">{checksum.toString('hex')}</span></b><br/>
     </div>
   </Paper>
 

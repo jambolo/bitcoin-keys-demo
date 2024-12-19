@@ -1,3 +1,7 @@
+###
+# Constants and utility functions for Bitcoin key and address validation.
+#
+###
 Base58 = require "base-58"
 Crypto = require "crypto"
 
@@ -8,6 +12,26 @@ Crypto = require "crypto"
 #  height: 100px;
 #  width: 300px;
 #}
+###
+# Constants:
+# - CHECKSUM_BITS: Number of bits in the WIF checksum.
+# - CHECKSUM_SIZE: Size of the WIF checksum in bytes.
+# - PRIVATE_KEY_BITS: Number of bits in a private key.
+# - PRIVATE_KEY_SIZE: Size of the private key in bytes.
+# - DECODED_COMPRESSED_PRIVATE_KEY_SIZE: Size of a decoded compressed private key WIF.
+# - DECODED_UNCOMPRESSED_PRIVATE_KEY_SIZE: Size of a decoded uncompressed private key WIF.
+# - MAX_PRIVATE_KEY: Maximum value for a secp256k1 private key.
+# - MIN_PRIVATE_KEY: Minimum value for a secp256k1 private key.
+# - PUBLIC_KEY_COORD_BITS: Number of bits in a public key coordinate.
+# - COMPRESSED_PUBLIC_KEY_SIZE: Size of a compressed public key.
+# - UNCOMPRESSED_PUBLIC_KEY_SIZE: Size of an uncompressed public key.
+# - PUBKEYHASH_BITS: Number of bits in a public key hash.
+# - PUBKEYHASH_SIZE: Size of a public key hash in bytes.
+# - DECODED_BASE58_ADDRESS_SIZE: Size of a decoded Base58 address.
+# - P2PKH_PREFIX: Prefix for Pay-to-PubKey-Hash addresses.
+# - P2SH_PREFIX: Prefix for Pay-to-Script-Hash addresses.
+# - BASE58_ALPHABET: Alphabet used for Base58 encoding.
+###
 CHECKSUM_BITS = 32
 CHECKSUM_SIZE = CHECKSUM_BITS / 8
 PRIVATE_KEY_BITS = 256
@@ -24,15 +48,30 @@ PUBKEYHASH_SIZE = PUBKEYHASH_BITS / 8
 export DECODED_BASE58_ADDRESS_SIZE = 1 + PUBKEYHASH_SIZE + CHECKSUM_SIZE
 export P2PKH_PREFIX = 0
 export P2SH_PREFIX = 5
+export BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
+###
+# Local Debugging functions:
+# - debugging: Flag to enable or disable debugging.
+# - debuggingIndent: Number of indentations for debugging output.
+###
 debugging = false
 debuggingIndent = 1
+###
+# Logs the provided arguments if debugging is enabled.
+#
+# @param {...*} args - The arguments to log.
+###
 logIfDebugging = (args...) ->
   if debugging
     indent = '| '.repeat(debuggingIndent)
     console.log indent, ...args
   return
 
+###
+# Logs the entry of a function if debugging is enabled.
+# @param {...*} args - The arguments to be logged.
+###
 logEnterIfDebugging = (args...) ->
   if debugging
     indent = '| '.repeat(debuggingIndent)
@@ -40,6 +79,11 @@ logEnterIfDebugging = (args...) ->
     ++debuggingIndent
   return
 
+###
+# Logs the provided arguments and exits the process if debugging is enabled.
+#
+# @param {...*} args - The arguments to log.
+###
 logExitIfDebugging = (args...) ->
   if debugging
     indent = '| '.repeat(debuggingIndent)
@@ -47,12 +91,30 @@ logExitIfDebugging = (args...) ->
     --debuggingIndent
   return
 
+###
+# Checks if the given text is a valid Base58 encoded string.
+# 
+# @param {string} text - The text to be validated as Base58.
+# @returns {boolean} - Returns true if the text is a valid Base58 encoded string, otherwise false.
+###
 export base58IsValid = (text) ->
   text.toString().match(/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/) != null
 
+###
+# Checks if a given string is valid hex.
+#
+# @param {string} hex - The string to validate.
+# @returns {boolean} - Returns true if the string is valid hex, otherwise false.
+###
 export hexIsValid = (hex) ->
   hex.toString().match(/^[0-9a-fA-F]+$/) != null
 
+###
+# Validates the checksum of the provided data.
+#
+# @param {String} data - The data for which the checksum needs to be validated.
+# @return {Boolean} - Returns true if the checksum is valid, otherwise false.
+###
 export checksumIsValid = (data) ->
   logEnterIfDebugging "checksumIsValid: (data=#{data.toString('hex')})"
 
@@ -65,6 +127,11 @@ export checksumIsValid = (data) ->
   logExitIfDebugging "checksumIsValid: returning #{valid.toString()}"
   return valid
 
+###
+# Checks if the provided binary private key is valid.
+# @param {String} key - The private key to validate.
+# @returns {Boolean} - Returns true if the private key is valid, otherwise false.
+###
 privateKeyIsValid = (key) ->
   logEnterIfDebugging "privateKeyIsValid: (key=#{key.toString('hex')})"
 
@@ -77,6 +144,12 @@ privateKeyIsValid = (key) ->
   logExitIfDebugging "privateKeyIsValid: returning true"
   return true
 
+###
+# Checks if the given hexadecimal string is a valid private key.
+# 
+# @param {string} hex - The hexadecimal string to validate.
+# @returns {boolean} - Returns true if the hex string is a valid private key, otherwise false.
+###
 export hexIsValidPrivateKey = (hex) ->
   logEnterIfDebugging "hexIsValidPrivateKey: (hex=#{hex.toString()})"
 
@@ -92,6 +165,12 @@ export hexIsValidPrivateKey = (hex) ->
   logExitIfDebugging "hexIsValidPrivateKey: returning #{valid.toString()}"
   return valid
 
+###
+# Checks if the provided string is valid Wallet Import Format (WIF).
+# 
+# @param {string} wif - The data to be validated.
+# @returns {boolean} - Returns true if the string is valid, otherwise false.
+###
 export wifIsValid = (wif) ->
   logEnterIfDebugging "wifIsValid: (wif=#{wif.toString()})"
 
@@ -101,6 +180,11 @@ export wifIsValid = (wif) ->
   return valid
 
 
+###
+# Checks if the provided public key is valid.
+# @param {String} key - The public key to validate.
+# @returns {Boolean} - Returns true if the public key is valid, otherwise false.
+###
 publicKeyIsValid = (key) ->
   logEnterIfDebugging "publicKeyIsValid: (key=#{key.toString('hex')})"
 
@@ -116,6 +200,11 @@ publicKeyIsValid = (key) ->
   logExitIfDebugging "publicKeyIsValid: returning true"
   return true
 
+###
+# Checks if the given string is a valid public key in hex.
+# @param {string} hex - The string to validate.
+# @returns {boolean} - Returns true if the string is a valid public key, otherwise false.
+###
 export hexIsValidPublicKey = (hex) ->
   logEnterIfDebugging "hexIsValidPublicKey: (hex=#{hex.toString()})"
 
@@ -131,7 +220,19 @@ export hexIsValidPublicKey = (hex) ->
   logExitIfDebugging "hexIsValidPublicKey: returning #{valid.toString()}"
   return valid
 
+###
+# Checks if the given data is a valid public key hash.
+# @param {Buffer} hash - The data to validate.
+# @returns {Boolean} - Returns true if the data is valid, otherwise false.
+###
 pubKeyHashIsValid = (hash) ->
+  logEnterIfDebugging "pubKeyHashIsValid: (hash=#{hash.toString('hex')})"
+
+  logExitIfDebugging "pubKeyHashIsValid: hash.length=#{hash.length}" if hash.length != PUBKEYHASH_SIZE
+  return false if hash.length != PUBKEYHASH_SIZE
+
+  logExitIfDebugging "pubKeyHashIsValid: returning true"
+  return true
   logEnterIfDebugging "pubKeyHashIsValid: (hash=#{hash.toString('hex')})"
 
   logExitIfDebugging "pubKeyHashIsValid: hash.length=#{}{hash.length}" if hash.length != PUBKEYHASH_SIZE
@@ -140,6 +241,12 @@ pubKeyHashIsValid = (hash) ->
   logExitIfDebugging "pubKeyHashIsValid: returning true"
   return true
 
+###
+# Checks if the given string is a valid public key hash in hex.
+# 
+# @param {string} hex - The hexadecimal string to validate.
+# @returns {boolean} - Returns true if the string is a valid public key hash, otherwise false.
+###
 export hexIsValidPubkeyHash = (hex) ->
   logEnterIfDebugging "hexIsValidPubkeyHash: (hex=#{hex.toString()})"
 
@@ -156,9 +263,15 @@ export hexIsValidPubkeyHash = (hex) ->
   return valid
 
 
+###
+# Calculates the checksum of the given data.
+# @param {Buffer} data - The data to calculate the checksum for.
+# @returns {Buffer} The calculated checksum.
+###
 checksum = (data) ->
   logEnterIfDebugging "checksum: (data=#{data.toString('hex')})"
 
+  # The checksum is the first 4 bytes of the double SHA-256 hash of the data.
   hash1 = Crypto.createHash('sha256').update(data).digest()
   hash2 = Crypto.createHash('sha256').update(hash1).digest()
   check = hash2[...CHECKSUM_SIZE]
@@ -166,6 +279,11 @@ checksum = (data) ->
   logExitIfDebugging "checksum: returning #{check.toString('hex')}"
   return check
 
+###
+# Encodes the given data using Base58Check encoding.
+# @param {Buffer} data - The data to be encoded.
+# @returns {String} The Base58Check encoded string.
+###
 base58Check = (data) ->
   logEnterIfDebugging "base58Check: (data=#{data.toString('hex')})"
 
@@ -176,6 +294,10 @@ base58Check = (data) ->
   logExitIfDebugging "base58Check: returning [ #{encoded.toString()}, #{check.toString('hex')} ]"
   return [ encoded, check ]
 
+###
+# Generates a new secp256k1 private key.
+# @returns {String} The generated private key.
+###
 export generatedPrivateKey = () ->
   key = Buffer.alloc(PRIVATE_KEY_SIZE)
   Crypto.randomFillSync(key)
@@ -185,10 +307,23 @@ export generatedPrivateKey = () ->
 
   return key
 
+###
+# Generates a new WIF-encoded secp256k1 private key.
+# 
+# @returns {String} The generated key.
+###
 export generatedWif = () ->
   [ encoded ] = encodedWif(generatedPrivateKey())
   return encoded
 
+###
+# Encodes a given private key into Wallet Import Format (WIF).
+#
+# @param {Buffer} key - The private key to be encoded.
+# @param {boolean} [compressed=true] - Whether the public key should be compressed.
+# @param {number} [prefix=0x80] - The prefix byte to use for the WIF encoding.
+# @returns {string} The encoded WIF string.
+###
 export encodedWif = (key, compressed = true, prefix = 0x80) ->
   logEnterIfDebugging "encodedWif: (key=#{key.toString('hex')}, compressed=#{compressed.toString()}, prefix=#{prefix})"
 
@@ -201,6 +336,12 @@ export encodedWif = (key, compressed = true, prefix = 0x80) ->
   logExitIfDebugging "encodedWif: returning #{encoded[0].toString()}"
   return encoded
 
+###
+# Decodes a Wallet Import Format (WIF) string into a private key.
+# 
+# @param {string} wif - The WIF string to decode.
+# @returns {Object} - The decoded WIF information.
+###
 export decodedWif = (wif) ->
   logEnterIfDebugging "decodedWif: (wif=#{wif.toString()})"
 
@@ -225,6 +366,13 @@ export decodedWif = (wif) ->
   logExitIfDebugging "decodedWif: returning [ true, #{privKey.toString('hex')}, #{compressed}, #{check.toString('hex')}, #{prefix} ]"
   return [ true, privKey, compressed, check, prefix ]
 
+###
+# Generates a public key from a given private key.
+#
+# @param {Buffer} privKey - The private key to generate the public key from.
+# @param {Boolean} compressed - A flag indicating whether the public key should be compressed.
+# @returns {String} The generated public key.
+###
 export publicKey = (privKey, compressed) ->
   logEnterIfDebugging "publicKey: (privKey=#{privKey.toString("hex")}, compressed=#{compressed.toString()}"
 
@@ -235,6 +383,11 @@ export publicKey = (privKey, compressed) ->
   logExitIfDebugging "publicKey: returning #{key.toString("hex")}"
   return key
 
+###
+# Generates a public key hash from the given public key.
+# @param {String} pubKey - The public key to be hashed.
+# @returns {String} The resulting public key hash.
+###
 export pubKeyHash = (pubKey) ->
   logEnterIfDebugging "pubKey: (pubKey=#{pubKey.toString('hex')})"
 
@@ -244,6 +397,13 @@ export pubKeyHash = (pubKey) ->
   logExitIfDebugging "pubKeyHash: returning #{hash2.toString('hex')}"
   return hash2
 
+###
+# Generates a Base58Check encoded address from a given public key.
+#
+# @param {Buffer} pubKey - The public key to generate the address from.
+# @param {number} [prefix=0] - The prefix to use for the address. Defaults to 0.
+# @returns {string} - The Base58Check encoded address.
+###
 export base58Address = (pubKey, prefix = 0) ->
   logEnterIfDebugging "base58Address: (pubKey=#{pubKey.toString('hex')}, prefix=#{prefix})"
 
@@ -253,6 +413,13 @@ export base58Address = (pubKey, prefix = 0) ->
   logExitIfDebugging "base58Address: returning [ #{encoded.toString()}, #{check.toString('hex')} ]"
   return [ encoded, check ]
 
+###
+# Encodes a given hash into a Base58Check encoded address with an optional prefix.
+#
+# @param {Buffer} hash - The hash to be encoded.
+# @param {number} [prefix=0] - The prefix to be added to the hash before encoding.
+# @returns {[string, Buffer]} - The Base58Check encoded address along with the checksum value.
+###
 export base58EncodedAddress = (hash, prefix = 0) ->
   logEnterIfDebugging "base58EncodedAddress: (hash=#{hash.toString('hex')}, prefix=#{prefix})"
 
@@ -262,6 +429,12 @@ export base58EncodedAddress = (hash, prefix = 0) ->
   logExitIfDebugging "base58EncodedAddress: returning [ #{encoded.toString()}, #{check.toString('hex')} ]"
   return [ encoded, check ]
 
+###
+Decodes a Base58 encoded Bitcoin address.
+
+@param {String} addr - The Base58 encoded Bitcoin address to decode.
+@returns {String} - The decoded Bitcoin address.
+###
 export decodedBase58Address = (addr) ->
   logEnterIfDebugging "decodedBase58Address: (addr=#{addr.toString()})"
 
@@ -279,6 +452,11 @@ export decodedBase58Address = (addr) ->
   logExitIfDebugging "decodedBase58Address: returning [ true, #{hash.toString('hex')}, #{prefix}, #{check.toString('hex')} ]"
   return [ true, hash, prefix, check ]
 
+###
+# Function to get the address type name based on the given prefix.
+# @param {String} prefix - The prefix used to determine the address type name.
+# @returns {String} The address type name corresponding to the given prefix.
+###
 export addressTypeName = (prefix) ->
   if prefix is 0x00
     'Bitcoin P2PKH'
@@ -293,6 +471,11 @@ export addressTypeName = (prefix) ->
   else
     null
 
+###
+# Checks if the given Bitcoin address is valid.
+# @param {String} addr - The Bitcoin address to validate.
+# @returns {Boolean} - Returns true if the address is valid, otherwise false.
+###
 export addressIsValid = (addr) ->
   [valid] = decodedBase58Address(addr)
   return valid

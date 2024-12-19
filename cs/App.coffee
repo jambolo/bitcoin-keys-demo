@@ -3,6 +3,7 @@ import './App.css'
 import AddressPage from './AddressPage'
 import PrivateKeyPage from './PrivateKeyPage'
 import PublicKeyPage from './PublicKeyPage'
+import MiniKeyPage from './MiniKeyPage'
 import TopBar from './TopBar'
 
 import React, { Component } from 'react'
@@ -15,6 +16,7 @@ class App extends Component
       "Private Key" : <PrivateKeyPage app={this} />
       "Public Key" :  <PublicKeyPage app={this} />
       "Address" :     <AddressPage app={this} />
+      "Mini key" :     <MiniKeyPage app={this} />
     @state =
       demo:  "Private Key"
     return
