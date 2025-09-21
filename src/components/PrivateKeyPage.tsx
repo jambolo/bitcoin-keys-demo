@@ -15,6 +15,7 @@ import {
   generateWifSteps,
   isValidHex 
 } from '@/lib/bitcoin'
+import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 export function PrivateKeyPage() {
   // Persistent inputs using useKV
@@ -179,21 +180,28 @@ export function PrivateKeyPage() {
                         </code>
                       </div>
                     </div>
-                    <div>
-                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Final: Base58 Encoded WIF (Compressed)</Label>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                          {compressedWif}
-                        </code>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => copyToClipboard(compressedWif)}
-                          title="Copy"
-                        >
-                          <Copy size={16} />
-                        </Button>
+                    <div className="flex gap-4 items-start">
+                      <div className="flex-1">
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Final: Base58 Encoded WIF (Compressed)</Label>
+                        <div className="flex gap-2">
+                          <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
+                            {compressedWif}
+                          </code>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => copyToClipboard(compressedWif)}
+                            title="Copy"
+                          >
+                            <Copy size={16} />
+                          </Button>
+                        </div>
                       </div>
+                      <QRCodeDisplay 
+                        value={compressedWif} 
+                        title="Compressed WIF" 
+                        size={100}
+                      />
                     </div>
                   </div>
                 )}
@@ -232,21 +240,28 @@ export function PrivateKeyPage() {
                         </code>
                       </div>
                     </div>
-                    <div>
-                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Final: Base58 Encoded WIF (Uncompressed)</Label>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                          {uncompressedWif}
-                        </code>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => copyToClipboard(uncompressedWif)}
-                          title="Copy"
-                        >
-                          <Copy size={16} />
-                        </Button>
+                    <div className="flex gap-4 items-start">
+                      <div className="flex-1">
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Final: Base58 Encoded WIF (Uncompressed)</Label>
+                        <div className="flex gap-2">
+                          <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
+                            {uncompressedWif}
+                          </code>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => copyToClipboard(uncompressedWif)}
+                            title="Copy"
+                          >
+                            <Copy size={16} />
+                          </Button>
+                        </div>
                       </div>
+                      <QRCodeDisplay 
+                        value={uncompressedWif} 
+                        title="Uncompressed WIF" 
+                        size={100}
+                      />
                     </div>
                   </div>
                 )}

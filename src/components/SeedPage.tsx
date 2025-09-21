@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Copy, Shuffle, ArrowRight, Key } from '@phosphor-icons/react'
 import * as bip39 from 'bip39'
+import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 export function SeedPage() {
   // Persistent inputs using useKV
@@ -247,8 +248,8 @@ export function SeedPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-3">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">Master Private Key</Label>
                     <div className="flex gap-2">
                       <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
@@ -263,10 +264,17 @@ export function SeedPage() {
                         <Copy size={16} />
                       </Button>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">First 32 bytes of master seed</div>
+                    <div className="text-xs text-muted-foreground">First 32 bytes of master seed</div>
+                    <div className="flex justify-center mt-2">
+                      <QRCodeDisplay 
+                        value={masterPrivateKey} 
+                        title="Master Private Key" 
+                        size={120}
+                      />
+                    </div>
                   </div>
 
-                  <div>
+                  <div className="space-y-3">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">Master Public Key</Label>
                     <div className="flex gap-2">
                       <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
@@ -281,7 +289,14 @@ export function SeedPage() {
                         <Copy size={16} />
                       </Button>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">Derived from master private key</div>
+                    <div className="text-xs text-muted-foreground">Derived from master private key</div>
+                    <div className="flex justify-center mt-2">
+                      <QRCodeDisplay 
+                        value={masterPublicKey} 
+                        title="Master Public Key" 
+                        size={120}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -312,13 +327,13 @@ export function SeedPage() {
                 <Label className="text-xs uppercase tracking-wide text-muted-foreground">Derived Keys (First 5 addresses)</Label>
                 
                 {derivedKeys.map((key, index) => (
-                  <div key={index} className="p-3 bg-muted rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
+                  <div key={index} className="p-4 bg-muted rounded-lg">
+                    <div className="flex items-center gap-2 mb-3">
                       <Key size={16} className="text-accent" />
                       <code className="text-sm font-medium">{key.path}</code>
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
-                      <div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="space-y-2">
                         <Label className="text-xs text-muted-foreground">Private Key</Label>
                         <div className="flex gap-2">
                           <code className="flex-1 p-2 bg-background rounded font-mono text-xs break-all">
@@ -333,8 +348,15 @@ export function SeedPage() {
                             <Copy size={12} />
                           </Button>
                         </div>
+                        <div className="flex justify-center mt-2">
+                          <QRCodeDisplay 
+                            value={key.privateKey} 
+                            title={`Private Key ${index + 1}`} 
+                            size={100}
+                          />
+                        </div>
                       </div>
-                      <div>
+                      <div className="space-y-2">
                         <Label className="text-xs text-muted-foreground">Address</Label>
                         <div className="flex gap-2">
                           <code className="flex-1 p-2 bg-background rounded font-mono text-xs">
@@ -348,6 +370,13 @@ export function SeedPage() {
                           >
                             <Copy size={12} />
                           </Button>
+                        </div>
+                        <div className="flex justify-center mt-2">
+                          <QRCodeDisplay 
+                            value={key.address} 
+                            title={`Address ${index + 1}`} 
+                            size={100}
+                          />
                         </div>
                       </div>
                     </div>

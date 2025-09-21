@@ -14,6 +14,7 @@ import {
   privateKeyFromHex,
   BitcoinKeyData
 } from '@/lib/bitcoin'
+import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 export function MiniKeyPage() {
   // Persistent inputs using useKV
@@ -92,21 +93,30 @@ export function MiniKeyPage() {
             {miniKeyInput && (
               <div className="space-y-2">
                 <Label className="text-xs uppercase tracking-wide text-muted-foreground">Generated Mini Key</Label>
-                <div className="flex gap-2">
-                  <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                    {miniKeyInput}
-                  </code>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copyToClipboard(miniKeyInput)}
-                    title="Copy"
-                  >
-                    <Copy size={16} />
-                  </Button>
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  This mini key has been automatically populated in the derivation section below
+                <div className="flex gap-4 items-start">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex gap-2">
+                      <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
+                        {miniKeyInput}
+                      </code>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => copyToClipboard(miniKeyInput)}
+                        title="Copy"
+                      >
+                        <Copy size={16} />
+                      </Button>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      This mini key has been automatically populated in the derivation section below
+                    </div>
+                  </div>
+                  <QRCodeDisplay 
+                    value={miniKeyInput} 
+                    title="Mini Key" 
+                    size={100}
+                  />
                 </div>
               </div>
             )}
@@ -266,20 +276,29 @@ export function MiniKeyPage() {
 
                     <div>
                       <Label className="text-xs uppercase tracking-wide text-muted-foreground">Private Key (Hex)</Label>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-3 bg-muted rounded font-mono text-sm break-all">
-                          {derivedData.privateKeyHex}
-                        </code>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => copyToClipboard(derivedData.privateKeyHex || '')}
-                          title="Copy"
-                        >
-                          <Copy size={16} />
-                        </Button>
+                      <div className="flex gap-4 items-start">
+                        <div className="flex-1 space-y-2">
+                          <div className="flex gap-2">
+                            <code className="flex-1 p-3 bg-muted rounded font-mono text-sm break-all">
+                              {derivedData.privateKeyHex}
+                            </code>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => copyToClipboard(derivedData.privateKeyHex || '')}
+                              title="Copy"
+                            >
+                              <Copy size={16} />
+                            </Button>
+                          </div>
+                          <div className="text-xs text-muted-foreground">32-byte private key derived from mini key</div>
+                        </div>
+                        <QRCodeDisplay 
+                          value={derivedData.privateKeyHex || ''} 
+                          title="Private Key" 
+                          size={100}
+                        />
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1">32-byte private key derived from mini key</div>
                     </div>
                   </div>
                 </div>

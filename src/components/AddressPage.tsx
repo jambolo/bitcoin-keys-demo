@@ -19,6 +19,7 @@ import {
   BitcoinKeyData,
   isValidHex
 } from '@/lib/bitcoin'
+import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 export function AddressPage() {
   // Persistent inputs using useKV
@@ -308,8 +309,8 @@ export function AddressPage() {
               {/* Addresses */}
               <div className="space-y-4">
                 <h4 className="font-semibold text-lg">Generated Addresses</h4>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-3">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">P2PKH (Legacy)</Label>
                     <div className="flex gap-2">
                       <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
@@ -319,10 +320,17 @@ export function AddressPage() {
                         <Copy size={16} />
                       </Button>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">Starts with '1' - Pay to Public Key Hash</div>
+                    <div className="text-xs text-muted-foreground">Starts with '1' - Pay to Public Key Hash</div>
+                    <div className="flex justify-center mt-2">
+                      <QRCodeDisplay 
+                        value={derivedData.p2pkhAddress || ''} 
+                        title="P2PKH Address" 
+                        size={120}
+                      />
+                    </div>
                   </div>
 
-                  <div>
+                  <div className="space-y-3">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">P2SH (Script Hash)</Label>
                     <div className="flex gap-2">
                       <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
@@ -332,10 +340,17 @@ export function AddressPage() {
                         <Copy size={16} />
                       </Button>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">Starts with '3' - Pay to Script Hash</div>
+                    <div className="text-xs text-muted-foreground">Starts with '3' - Pay to Script Hash</div>
+                    <div className="flex justify-center mt-2">
+                      <QRCodeDisplay 
+                        value={derivedData.p2shAddress || ''} 
+                        title="P2SH Address" 
+                        size={120}
+                      />
+                    </div>
                   </div>
 
-                  <div>
+                  <div className="space-y-3">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">Bech32 (SegWit)</Label>
                     <div className="flex gap-2">
                       <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
@@ -345,10 +360,17 @@ export function AddressPage() {
                         <Copy size={16} />
                       </Button>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">Starts with 'bc1q' - Native SegWit</div>
+                    <div className="text-xs text-muted-foreground">Starts with 'bc1q' - Native SegWit</div>
+                    <div className="flex justify-center mt-2">
+                      <QRCodeDisplay 
+                        value={derivedData.bech32Address || ''} 
+                        title="Bech32 Address" 
+                        size={120}
+                      />
+                    </div>
                   </div>
 
-                  <div>
+                  <div className="space-y-3">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">Taproot (P2TR)</Label>
                     <div className="flex gap-2">
                       <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
@@ -358,7 +380,14 @@ export function AddressPage() {
                         <Copy size={16} />
                       </Button>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">Starts with 'bc1p' - Pay to Taproot</div>
+                    <div className="text-xs text-muted-foreground">Starts with 'bc1p' - Pay to Taproot</div>
+                    <div className="flex justify-center mt-2">
+                      <QRCodeDisplay 
+                        value={derivedData.taprootAddress || ''} 
+                        title="Taproot Address" 
+                        size={120}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
