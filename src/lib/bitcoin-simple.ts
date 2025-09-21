@@ -192,7 +192,7 @@ export function derivePublicKey(privateKeyHex: string): string {
     
     // Create a compressed public key (demo purposes only)
     const prefix = hash[0] % 2 === 0 ? '02' : '03'
-    return prefix + hash.toString('hex')
+    return prefix + Buffer.from(hash).toString('hex')
     
   } catch (error) {
     console.error('Failed to derive public key:', error)
@@ -212,7 +212,7 @@ export function privateKeyFromWif(wif: string): BitcoinKeyData | null {
     // Create public key hash
     const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex')
     const hash160 = bitcoin.crypto.hash160(publicKeyBuffer)
-    const publicKeyHash = hash160.toString('hex')
+    const publicKeyHash = Buffer.from(hash160).toString('hex')
     
     // Generate P2PKH address
     const p2pkhAddress = generateP2PKHAddress(publicKeyHash)

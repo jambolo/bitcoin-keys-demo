@@ -122,7 +122,7 @@ export function SeedPage() {
       // Many wallets accept invalid seed phrases but show warnings
       try {
         const seed = bip39.mnemonicToSeedSync(seedPhrase)
-        setMasterSeed(seed.toString('hex'))
+        setMasterSeed(Buffer.from(seed).toString('hex'))
         
         // Generate proper BIP-32 master keys
         const masterNode = bip32.fromSeed(seed)
