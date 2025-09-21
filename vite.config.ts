@@ -23,13 +23,16 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': resolve(projectRoot, 'src')
+      '@': resolve(projectRoot, 'src'),
+      buffer: 'buffer',
+      process: 'process/browser',
+      util: 'util',
     }
   },
   define: {
     global: 'globalThis',
   },
   optimizeDeps: {
-    include: ['bitcoinjs-lib', 'bip39', 'bs58', 'ecpair', 'bip32', 'tiny-secp256k1']
+    include: ['bitcoinjs-lib', 'bip39', 'bs58', 'ecpair', 'bip32', 'tiny-secp256k1', 'buffer', 'process', 'util']
   }
 });
