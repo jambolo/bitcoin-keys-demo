@@ -235,7 +235,7 @@ export function AddressPage() {
               
               {/* Key Chain */}
               <div className="space-y-4">
-                <h4 className="font-semibold text-lg">Derived Key Chain</h4>
+                <h4 className="font-semibold text-lg">Derived Public Key Hash</h4>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {derivedData.privateKeyWif && (
                     <div>
