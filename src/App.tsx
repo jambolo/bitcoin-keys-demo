@@ -15,7 +15,7 @@ function App() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Bitcoin Address Demo</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-4">Bitcoin Address and Keys Demo</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Explore Bitcoin cryptography through interactive demonstrations of key generation, 
             encoding, and address derivation processes.
