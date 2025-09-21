@@ -38,6 +38,21 @@ export function PrivateKeyPage() {
   // Validation section
   const [validation, setValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
 
+  // Initialize with random private key if none exists
+  useEffect(() => {
+    const initializeRandomKey = async () => {
+      if (!privateKeyHex) {
+        const randomWif = await generateRandomPrivateKey()
+        const decoded = await decodeWif(randomWif)
+        if (decoded) {
+          setPrivateKeyHex(decoded.privateKeyHex)
+        }
+      }
+    }
+    
+    initializeRandomKey()
+  }, [privateKeyHex, setPrivateKeyHex])
+
   // Handle private key hex input
   useEffect(() => {
     const updateWif = async () => {

@@ -25,12 +25,24 @@ export function PublicKeyPage() {
   // Get shared compressed WIF from Private Key page
   const [sharedCompressedWif] = useKV('shared-compressed-wif', '')
   
-  // Initialize WIF input with shared compressed WIF
+  // Initialize WIF input with shared compressed WIF on first load or when shared WIF changes
   useEffect(() => {
-    if (sharedCompressedWif) {
+    if (sharedCompressedWif && !wifInput) {
       setWifInput(sharedCompressedWif)
     }
-  }, [sharedCompressedWif, setWifInput])
+  }, [sharedCompressedWif, wifInput, setWifInput])
+
+  // Initialize with random key if no shared WIF and no current WIF input
+  useEffect(() => {
+    const initializeWithRandom = async () => {
+      if (!wifInput && !sharedCompressedWif) {
+        const randomWif = await generateRandomPrivateKey()
+        setWifInput(randomWif)
+      }
+    }
+    
+    initializeWithRandom()
+  }, [wifInput, sharedCompressedWif, setWifInput])
 
   // Handle WIF input for derivation
   useEffect(() => {
