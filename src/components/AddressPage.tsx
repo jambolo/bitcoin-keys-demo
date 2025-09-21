@@ -419,47 +419,7 @@ export function AddressPage() {
             />
           </div>
 
-          <div className="p-3 bg-muted/50 rounded-lg">
-            <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block">Example Addresses</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-              <div>
-                <span className="text-muted-foreground">Legacy P2PKH:</span>
-                <button 
-                  className="block font-mono text-blue-600 hover:text-blue-800 break-all"
-                  onClick={() => setAddressInput('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')}
-                >
-                  1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
-                </button>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Legacy P2SH:</span>
-                <button 
-                  className="block font-mono text-blue-600 hover:text-blue-800 break-all"
-                  onClick={() => setAddressInput('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')}
-                >
-                  3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy
-                </button>
-              </div>
-              <div>
-                <span className="text-muted-foreground">SegWit v0:</span>
-                <button 
-                  className="block font-mono text-blue-600 hover:text-blue-800 break-all"
-                  onClick={() => setAddressInput('bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4')}
-                >
-                  bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
-                </button>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Taproot:</span>
-                <button 
-                  className="block font-mono text-blue-600 hover:text-blue-800 break-all"
-                  onClick={() => setAddressInput('bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8ztwac72sfr9rusxg3297')}
-                >
-                  bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8ztwac72sfr9rusxg3297
-                </button>
-              </div>
-            </div>
-          </div>
+
 
           {decodedAddress && (
             <div className="space-y-4">
