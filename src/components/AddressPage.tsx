@@ -14,7 +14,10 @@ import {
   validateBitcoinAddress,
   decodeAddress,
   BitcoinKeyData,
-  isValidHex
+  isValidHex,
+  generateAddresses,
+  doubleSha256,
+  base58Encode
 } from '@/lib/bitcoin-lite'
 import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
@@ -43,8 +46,8 @@ export function AddressPage() {
   }, [sharedTaprootAddress, validationInput, setValidationInput])
 
   // Generate random key
-  const handleRandomKey = () => {
-    const randomWif = generateRandomPrivateKey()
+  const handleRandomKey = async () => {
+    const randomWif = await generateRandomPrivateKey()
     setWifInput(randomWif)
     setHexInput('')
     setPubkeyInput('')
@@ -53,60 +56,109 @@ export function AddressPage() {
 
   // Derive all data from any valid input
   useEffect(() => {
-    let data: BitcoinKeyData | null = null
+    const processInputs = async () => {
+      let data: BitcoinKeyData | null = null
 
-    // Try WIF first
-    if (wifInput) {
-      data = privateKeyFromWif(wifInput)
-      if (data) {
-        setHexInput(data.privateKeyHex || '')
-        setPubkeyInput(data.publicKeyHex || '')
-        setHashInput(data.publicKeyHash || '')
-      }
-    }
-    // Try hex private key
-    else if (hexInput && isValidHex(hexInput, 64)) {
-      data = privateKeyFromHex(hexInput)
-      if (data) {
-        setWifInput(data.privateKeyWif || '')
-        setPubkeyInput(data.publicKeyHex || '')
-        setHashInput(data.publicKeyHash || '')
-      }
-    }
-    // Try public key
-    else if (pubkeyInput && isValidHex(pubkeyInput)) {
-      if (pubkeyInput.length === 66 || pubkeyInput.length === 130) {
-        // Create a minimal data object from public key
-        data = {
-          publicKeyHex: pubkeyInput,
-          // We can't derive addresses from just public key without more complex logic
-          p2pkhAddress: 'N/A',
-          p2shAddress: 'N/A',
-          bech32Address: 'N/A',
-          taprootAddress: 'N/A'
+      // Try WIF first
+      if (wifInput) {
+        data = await privateKeyFromWif(wifInput)
+        if (data) {
+          setHexInput(data.privateKeyHex || '')
+          setPubkeyInput(data.publicKeyHex || '')
+          setHashInput(data.publicKeyHash || '')
         }
       }
-    }
-    // Try public key hash
-    else if (hashInput && isValidHex(hashInput, 40)) {
-      // Create addresses from public key hash
-      data = {
-        publicKeyHash: hashInput,
-        p2pkhAddress: 'N/A', // Would need bitcoin.payments.p2pkh
-        p2shAddress: 'N/A',
-        bech32Address: 'N/A',
-        taprootAddress: 'N/A'
+      // Try hex private key
+      else if (hexInput && isValidHex(hexInput, 64)) {
+        data = await privateKeyFromHex(hexInput)
+        if (data) {
+          setWifInput(data.privateKeyWif || '')
+          setPubkeyInput(data.publicKeyHex || '')
+          setHashInput(data.publicKeyHash || '')
+        }
+      }
+      // Try public key
+      else if (pubkeyInput && isValidHex(pubkeyInput)) {
+        if (pubkeyInput.length === 66 || pubkeyInput.length === 130) {
+          try {
+            const addresses = await generateAddresses(pubkeyInput)
+            data = {
+              publicKeyHex: pubkeyInput,
+              publicKeyHash: addresses.publicKeyHash,
+              p2pkhAddress: addresses.p2pkhAddress,
+              p2shAddress: addresses.p2shAddress,
+              bech32Address: addresses.bech32Address,
+              taprootAddress: addresses.taprootAddress
+            }
+            setHashInput(addresses.publicKeyHash)
+          } catch (error) {
+            data = {
+              publicKeyHex: pubkeyInput,
+              p2pkhAddress: 'Error generating',
+              p2shAddress: 'Error generating',
+              bech32Address: 'Error generating',
+              taprootAddress: 'Error generating'
+            }
+          }
+        }
+      }
+      // Try public key hash
+      else if (hashInput && isValidHex(hashInput, 40)) {
+        try {
+          // Generate addresses from hash manually
+          const hash = new Uint8Array(20)
+          for (let i = 0; i < 40; i += 2) {
+            hash[i / 2] = parseInt(hashInput.substring(i, i + 2), 16)
+          }
+          
+          // Generate P2PKH address
+          const p2pkhPayload = new Uint8Array(21)
+          p2pkhPayload[0] = 0x00
+          p2pkhPayload.set(hash, 1)
+          const p2pkhChecksum = await doubleSha256(p2pkhPayload)
+          const p2pkhWithChecksum = new Uint8Array(25)
+          p2pkhWithChecksum.set(p2pkhPayload)
+          p2pkhWithChecksum.set(p2pkhChecksum.slice(0, 4), 21)
+          const p2pkhAddress = base58Encode(p2pkhWithChecksum)
+          
+          // Generate P2SH address
+          const p2shPayload = new Uint8Array(21)
+          p2shPayload[0] = 0x05
+          p2shPayload.set(hash, 1)
+          const p2shChecksum = await doubleSha256(p2shPayload)
+          const p2shWithChecksum = new Uint8Array(25)
+          p2shWithChecksum.set(p2shPayload)
+          p2shWithChecksum.set(p2shChecksum.slice(0, 4), 21)
+          const p2shAddress = base58Encode(p2shWithChecksum)
+          
+          data = {
+            publicKeyHash: hashInput,
+            p2pkhAddress,
+            p2shAddress,
+            bech32Address: 'N/A (requires public key)',
+            taprootAddress: 'N/A (requires public key)'
+          }
+        } catch (error) {
+          data = {
+            publicKeyHash: hashInput,
+            p2pkhAddress: 'Error generating',
+            p2shAddress: 'Error generating',
+            bech32Address: 'N/A',
+            taprootAddress: 'N/A'
+          }
+        }
+      }
+
+      setDerivedData(data)
+
+      // Share taproot address with other components
+      if (data?.taprootAddress && data.taprootAddress !== 'N/A' && !data.taprootAddress.includes('Error')) {
+        setValidationInput(data.taprootAddress)
       }
     }
-
-    setDerivedData(data)
-
-    // Share taproot address with other components
-    if (data?.taprootAddress && data.taprootAddress !== 'N/A') {
-      // Use useKV hook to share data
-      setValidationInput(data.taprootAddress)
-    }
-  }, [wifInput, hexInput, pubkeyInput, hashInput, setHexInput, setPubkeyInput, setHashInput, setWifInput])
+    
+    processInputs()
+  }, [wifInput, hexInput, pubkeyInput, hashInput])
 
   // Decode address
   useEffect(() => {

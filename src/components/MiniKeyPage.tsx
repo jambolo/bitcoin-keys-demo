@@ -22,32 +22,50 @@ export function MiniKeyPage() {
   const [miniKeyInput, setMiniKeyInput] = useKV('mini-key-input', '')
   const [validation, setValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
   const [derivedData, setDerivedData] = useState<BitcoinKeyData | null>(null)
+  const [compressedWif, setCompressedWif] = useState('')
+  const [uncompressedWif, setUncompressedWif] = useState('')
 
   // Handle mini key input and validation
   useEffect(() => {
-    if (miniKeyInput) {
-      const validationResult = validateMiniKey(miniKeyInput)
-      setValidation(validationResult)
+    const processInput = async () => {
+      if (miniKeyInput) {
+        const validationResult = await validateMiniKey(miniKeyInput)
+        setValidation(validationResult)
 
-      if (validationResult.valid) {
-        const privateKeyHex = miniKeyToPrivateKey(miniKeyInput)
-        if (privateKeyHex) {
-          const keyData = privateKeyFromHex(privateKeyHex)
-          setDerivedData(keyData)
+        if (validationResult.valid) {
+          const privateKeyHex = await miniKeyToPrivateKey(miniKeyInput)
+          if (privateKeyHex) {
+            const keyData = await privateKeyFromHex(privateKeyHex)
+            setDerivedData(keyData)
+            
+            // Calculate WIF values for display
+            const compWif = await encodeWif(privateKeyHex, true)
+            const uncompWif = await encodeWif(privateKeyHex, false)
+            setCompressedWif(compWif || '')
+            setUncompressedWif(uncompWif || '')
+          } else {
+            setDerivedData(null)
+            setCompressedWif('')
+            setUncompressedWif('')
+          }
         } else {
           setDerivedData(null)
+          setCompressedWif('')
+          setUncompressedWif('')
         }
       } else {
+        setValidation({ valid: false })
         setDerivedData(null)
+        setCompressedWif('')
+        setUncompressedWif('')
       }
-    } else {
-      setValidation({ valid: false })
-      setDerivedData(null)
     }
+    
+    processInput()
   }, [miniKeyInput])
 
-  const generateRandom = () => {
-    const randomMiniKey = generateMiniKey()
+  const generateRandom = async () => {
+    const randomMiniKey = await generateMiniKey()
     setMiniKeyInput(randomMiniKey)
   }
 
@@ -342,12 +360,12 @@ export function MiniKeyPage() {
                             <div className="flex-1">
                               <div className="flex gap-2">
                                 <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                                  {derivedData.privateKeyHex && encodeWif(derivedData.privateKeyHex, false)}
+                                  {uncompressedWif}
                                 </code>
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  onClick={() => copyToClipboard(derivedData.privateKeyHex && encodeWif(derivedData.privateKeyHex, false) || '')}
+                                  onClick={() => copyToClipboard(uncompressedWif)}
                                   title="Copy"
                                 >
                                   <Copy size={16} />
@@ -355,7 +373,7 @@ export function MiniKeyPage() {
                               </div>
                             </div>
                             <QRCodeDisplay 
-                              value={derivedData.privateKeyHex && encodeWif(derivedData.privateKeyHex, false) || ''} 
+                              value={uncompressedWif} 
                               title="Uncompressed WIF" 
                               size={80}
                             />

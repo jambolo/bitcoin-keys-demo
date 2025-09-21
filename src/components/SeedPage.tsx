@@ -47,7 +47,7 @@ export function SeedPage() {
   }, [])
 
   // Generate derived keys function
-  const generateDerivedKeys = (basePath: string, masterNode: any) => {
+  const generateDerivedKeys = async (basePath: string, masterNode: any) => {
     const derived: Array<{
       path: string
       privateKey: string
@@ -67,7 +67,7 @@ export function SeedPage() {
         const privateKeyHex = addressNode.privateKey ? Buffer.from(addressNode.privateKey).toString('hex') : ''
         
         // Generate appropriate address type based on purpose
-        const keyData = importedPrivateKeyFromHex(privateKeyHex)
+        const keyData = await importedPrivateKeyFromHex(privateKeyHex)
         let address = 'Error generating address'
         
         if (keyData) {
@@ -104,53 +104,65 @@ export function SeedPage() {
 
   // Validate seed phrase
   useEffect(() => {
-    if (seedPhrase) {
-      const words = seedPhrase.trim().split(/\s+/)
-      
-      if (words.length === 0) {
-        setSeedValidation({ valid: false })
-        return
-      }
+    const processPhrase = async () => {
+      if (seedPhrase) {
+        const words = seedPhrase.trim().split(/\s+/)
+        
+        if (words.length === 0) {
+          setSeedValidation({ valid: false })
+          return
+        }
 
-      if (words.length !== 12 && words.length !== 15 && words.length !== 18 && words.length !== 21 && words.length !== 24) {
-        setSeedValidation({ valid: false, error: `Invalid word count: ${words.length}. Must be 12, 15, 18, 21, or 24 words.` })
-        return
-      }
+        if (words.length !== 12 && words.length !== 15 && words.length !== 18 && words.length !== 21 && words.length !== 24) {
+          setSeedValidation({ valid: false, error: `Invalid word count: ${words.length}. Must be 12, 15, 18, 21, or 24 words.` })
+          return
+        }
 
-      const isValid = bip39.validateMnemonic(seedPhrase)
-      if (isValid) {
-        setSeedValidation({ valid: true })
+        const isValid = bip39.validateMnemonic(seedPhrase)
+        if (isValid) {
+          setSeedValidation({ valid: true })
+        } else {
+          setSeedValidation({ valid: false, error: 'Invalid BIP-39 mnemonic phrase (checksum failure)' })
+        }
+        
+        // Generate master seed and keys regardless of BIP-39 validity
+        // Many wallets accept invalid seed phrases but show warnings
+        try {
+          const seed = bip39.mnemonicToSeedSync(seedPhrase)
+          setMasterSeed(Buffer.from(seed).toString('hex'))
+          
+          // Generate proper BIP-32 master keys
+          const masterNode = bip32.fromSeed(seed)
+          
+          // Generate master xpriv/xpub (at root level m/)
+          setXpriv(masterNode.toBase58())
+          setXpub(masterNode.neutered().toBase58())
+          
+          // Generate ypriv/ypub (m/49'/0'/0' for P2SH-P2WPKH)
+          const segwitNode = masterNode.derivePath("m/49'/0'/0'")
+          setYpriv(segwitNode.toBase58())
+          setYpub(segwitNode.neutered().toBase58())
+          
+          // Generate zpriv/zpub (m/84'/0'/0' for P2WPKH)
+          const nativeSegwitNode = masterNode.derivePath("m/84'/0'/0'")
+          setZpriv(nativeSegwitNode.toBase58())
+          setZpub(nativeSegwitNode.neutered().toBase58())
+          
+          // Generate derived keys based on derivation path
+          await generateDerivedKeys(derivationPath || "m/86'/0'/0'", masterNode)
+        } catch (error) {
+          console.error('Error generating keys from seed phrase:', error)
+          setMasterSeed('')
+          setXpriv('')
+          setXpub('')
+          setYpriv('')
+          setYpub('')
+          setZpriv('')
+          setZpub('')
+          setDerivedKeys([])
+        }
       } else {
-        setSeedValidation({ valid: false, error: 'Invalid BIP-39 mnemonic phrase (checksum failure)' })
-      }
-      
-      // Generate master seed and keys regardless of BIP-39 validity
-      // Many wallets accept invalid seed phrases but show warnings
-      try {
-        const seed = bip39.mnemonicToSeedSync(seedPhrase)
-        setMasterSeed(Buffer.from(seed).toString('hex'))
-        
-        // Generate proper BIP-32 master keys
-        const masterNode = bip32.fromSeed(seed)
-        
-        // Generate master xpriv/xpub (at root level m/)
-        setXpriv(masterNode.toBase58())
-        setXpub(masterNode.neutered().toBase58())
-        
-        // Generate ypriv/ypub (m/49'/0'/0' for P2SH-P2WPKH)
-        const segwitNode = masterNode.derivePath("m/49'/0'/0'")
-        setYpriv(segwitNode.toBase58())
-        setYpub(segwitNode.neutered().toBase58())
-        
-        // Generate zpriv/zpub (m/84'/0'/0' for P2WPKH)
-        const nativeSegwitNode = masterNode.derivePath("m/84'/0'/0'")
-        setZpriv(nativeSegwitNode.toBase58())
-        setZpub(nativeSegwitNode.neutered().toBase58())
-        
-        // Generate derived keys based on derivation path
-        generateDerivedKeys(derivationPath || "m/86'/0'/0'", masterNode)
-      } catch (error) {
-        console.error('Error generating keys from seed phrase:', error)
+        setSeedValidation({ valid: false })
         setMasterSeed('')
         setXpriv('')
         setXpub('')
@@ -160,17 +172,9 @@ export function SeedPage() {
         setZpub('')
         setDerivedKeys([])
       }
-    } else {
-      setSeedValidation({ valid: false })
-      setMasterSeed('')
-      setXpriv('')
-      setXpub('')
-      setYpriv('')
-      setYpub('')
-      setZpriv('')
-      setZpub('')
-      setDerivedKeys([])
     }
+    
+    processPhrase()
   }, [seedPhrase, derivationPath])
 
   const generateRandomSeed = () => {

@@ -40,58 +40,70 @@ export function PrivateKeyPage() {
 
   // Handle private key hex input
   useEffect(() => {
-    if (privateKeyHex && isValidHex(privateKeyHex, 64)) {
-      const compressed = encodeWif(privateKeyHex, true)
-      const uncompressed = encodeWif(privateKeyHex, false)
-      const cSteps = generateWifSteps(privateKeyHex, true)
-      const uSteps = generateWifSteps(privateKeyHex, false)
-      
-      setCompressedWif(compressed || '')
-      setUncompressedWif(uncompressed || '')
-      setCompressedSteps(cSteps)
-      setUncompressedSteps(uSteps)
-      
-      // Update shared compressed WIF for Public Key page
-      if (compressed) {
-        setSharedCompressedWif(compressed)
-        setWifInput(compressed)
-        setValidationInput(compressed)
+    const updateWif = async () => {
+      if (privateKeyHex && isValidHex(privateKeyHex, 64)) {
+        const compressed = await encodeWif(privateKeyHex, true)
+        const uncompressed = await encodeWif(privateKeyHex, false)
+        const cSteps = await generateWifSteps(privateKeyHex, true)
+        const uSteps = await generateWifSteps(privateKeyHex, false)
+        
+        setCompressedWif(compressed || '')
+        setUncompressedWif(uncompressed || '')
+        setCompressedSteps(cSteps)
+        setUncompressedSteps(uSteps)
+        
+        // Update shared compressed WIF for Public Key page
+        if (compressed) {
+          setSharedCompressedWif(compressed)
+          setWifInput(compressed)
+          setValidationInput(compressed)
+        }
+      } else {
+        setCompressedWif('')
+        setUncompressedWif('')
+        setCompressedSteps(null)
+        setUncompressedSteps(null)
+        // Clear WIF inputs when private key is invalid
+        setWifInput('')
+        setValidationInput('')
+        // Don't clear shared state here to preserve cross-page functionality
       }
-    } else {
-      setCompressedWif('')
-      setUncompressedWif('')
-      setCompressedSteps(null)
-      setUncompressedSteps(null)
-      // Clear WIF inputs when private key is invalid
-      setWifInput('')
-      setValidationInput('')
-      // Don't clear shared state here to preserve cross-page functionality
     }
+    
+    updateWif()
   }, [privateKeyHex])
 
   // Handle WIF input
   useEffect(() => {
-    if (wifInput) {
-      const decoded = decodeWif(wifInput)
-      setDecodedData(decoded)
-    } else {
-      setDecodedData(null)
+    const processWif = async () => {
+      if (wifInput) {
+        const decoded = await decodeWif(wifInput)
+        setDecodedData(decoded)
+      } else {
+        setDecodedData(null)
+      }
     }
+    
+    processWif()
   }, [wifInput])
 
   // Handle validation input
   useEffect(() => {
-    if (validationInput) {
-      const result = validateWif(validationInput)
-      setValidation(result)
-    } else {
-      setValidation({ valid: false })
+    const validateInput = async () => {
+      if (validationInput) {
+        const result = await validateWif(validationInput)
+        setValidation(result)
+      } else {
+        setValidation({ valid: false })
+      }
     }
+    
+    validateInput()
   }, [validationInput])
 
-  const generateRandom = () => {
-    const randomWif = generateRandomPrivateKey()
-    const decoded = decodeWif(randomWif)
+  const generateRandom = async () => {
+    const randomWif = await generateRandomPrivateKey()
+    const decoded = await decodeWif(randomWif)
     if (decoded) {
       setPrivateKeyHex(decoded.privateKeyHex)
     }

@@ -34,18 +34,22 @@ export function PublicKeyPage() {
 
   // Handle WIF input for derivation
   useEffect(() => {
-    if (wifInput) {
-      const data = privateKeyFromWif(wifInput)
-      setDerivedData(data)
-      
-      // Auto-populate validation input with derived public key
-      if (data?.publicKeyHex && !publicKeyInput) {
-        setPublicKeyInput(data.publicKeyHex)
+    const processWif = async () => {
+      if (wifInput) {
+        const data = await privateKeyFromWif(wifInput)
+        setDerivedData(data)
+        
+        // Auto-populate validation input with derived public key
+        if (data?.publicKeyHex && !publicKeyInput) {
+          setPublicKeyInput(data.publicKeyHex)
+        }
+      } else {
+        setDerivedData(null)
       }
-    } else {
-      setDerivedData(null)
     }
-  }, [wifInput])
+    
+    processWif()
+  }, [wifInput, publicKeyInput])
 
   // Update validation input when derived data changes
   useEffect(() => {
@@ -64,8 +68,8 @@ export function PublicKeyPage() {
     }
   }, [publicKeyInput])
 
-  const generateRandom = () => {
-    const randomWif = generateRandomPrivateKey()
+  const generateRandom = async () => {
+    const randomWif = await generateRandomPrivateKey()
     setWifInput(randomWif)
   }
 
