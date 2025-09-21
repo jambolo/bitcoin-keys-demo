@@ -1,0 +1,285 @@
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Copy, Shuffle, ArrowRight } from '@phosphor-icons/react'
+import { 
+  generateMiniKey, 
+  validateMiniKey,
+  miniKeyToPrivateKey,
+  privateKeyFromHex,
+  BitcoinKeyData
+} from '@/lib/bitcoin'
+
+export function MiniKeyPage() {
+  const [miniKeyInput, setMiniKeyInput] = useState('')
+  const [validation, setValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
+  const [derivedData, setDerivedData] = useState<BitcoinKeyData | null>(null)
+
+  // Handle mini key input and validation
+  useEffect(() => {
+    if (miniKeyInput) {
+      const validationResult = validateMiniKey(miniKeyInput)
+      setValidation(validationResult)
+
+      if (validationResult.valid) {
+        const privateKeyHex = miniKeyToPrivateKey(miniKeyInput)
+        if (privateKeyHex) {
+          const keyData = privateKeyFromHex(privateKeyHex)
+          setDerivedData(keyData)
+        } else {
+          setDerivedData(null)
+        }
+      } else {
+        setDerivedData(null)
+      }
+    } else {
+      setValidation({ valid: false })
+      setDerivedData(null)
+    }
+  }, [miniKeyInput])
+
+  const generateRandom = () => {
+    const randomMiniKey = generateMiniKey()
+    setMiniKeyInput(randomMiniKey)
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold mb-2">Mini Key Page</h2>
+        <p className="text-muted-foreground">
+          Demonstrates Bitcoin mini private key validation and key derivation.
+        </p>
+      </div>
+
+      {/* Mini Key Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ArrowRight className="text-accent" />
+            Mini Key Derivation
+          </CardTitle>
+          <CardDescription>
+            Enter a 30-character Bitcoin mini key to derive the full key chain
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="mini-key-input">Mini Key</Label>
+            <div className="flex gap-2">
+              <Input
+                id="mini-key-input"
+                value={miniKeyInput}
+                onChange={(e) => setMiniKeyInput(e.target.value)}
+                placeholder="30-character mini key starting with 'S'"
+                className="font-mono text-sm"
+                maxLength={30}
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={generateRandom}
+                title="Generate Random"
+              >
+                <Shuffle size={16} />
+              </Button>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Mini keys are exactly 30 characters long and start with 'S'
+            </div>
+          </div>
+
+          {/* Validation Status */}
+          <div className="space-y-2">
+            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Validation Status</Label>
+            <div className="flex items-center gap-2">
+              <Badge variant={validation.valid ? "default" : miniKeyInput ? "destructive" : "secondary"}>
+                {!miniKeyInput ? 'No Input' : validation.valid ? 'Valid' : 'Invalid'}
+              </Badge>
+              {validation.error && (
+                <span className="text-sm text-destructive">{validation.error}</span>
+              )}
+            </div>
+          </div>
+
+          {miniKeyInput && (
+            <div className="space-y-4">
+              <Separator />
+              
+              {/* Validation Details */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Mini Key Validation Rules</h4>
+                <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                  <div className={`flex items-center gap-2 ${miniKeyInput.length === 30 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <span>{miniKeyInput.length === 30 ? '✓' : '✗'}</span>
+                    <span>Length: {miniKeyInput.length}/30 characters</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${miniKeyInput.startsWith('S') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <span>{miniKeyInput.startsWith('S') ? '✓' : '✗'}</span>
+                    <span>Starts with 'S': {miniKeyInput.charAt(0) || 'N/A'}</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]*$/.test(miniKeyInput) ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <span>{/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]*$/.test(miniKeyInput) ? '✓' : '✗'}</span>
+                    <span>Base58 characters only</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${validation.valid ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <span>{validation.valid ? '✓' : '✗'}</span>
+                    <span>Cryptographic check: SHA256(minikey + '?') first byte = 0</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Derived Key Chain */}
+              {derivedData && validation.valid && (
+                <div className="space-y-4">
+                  <Separator />
+                  <h4 className="font-semibold text-lg">Derived Key Chain</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Mini Key Input</Label>
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
+                          {miniKeyInput}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(miniKeyInput)}
+                          title="Copy"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">30-character compact private key format</div>
+                    </div>
+
+                    <div className="text-center text-muted-foreground">
+                      <ArrowRight className="mx-auto" size={20} />
+                      <div className="text-xs mt-1">SHA256(mini_key)</div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Private Key (Hex)</Label>
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-3 bg-muted rounded font-mono text-sm break-all">
+                          {derivedData.privateKeyHex}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(derivedData.privateKeyHex || '')}
+                          title="Copy"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">32-byte private key derived from mini key</div>
+                    </div>
+
+                    <div className="text-center text-muted-foreground">
+                      <ArrowRight className="mx-auto" size={20} />
+                      <div className="text-xs mt-1">ECDSA Point Multiplication</div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Public Key (Hex)</Label>
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-3 bg-muted rounded font-mono text-sm break-all">
+                          {derivedData.publicKeyHex}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(derivedData.publicKeyHex || '')}
+                          title="Copy"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {derivedData.compressed ? 'Compressed public key (33 bytes)' : 'Uncompressed public key (65 bytes)'}
+                      </div>
+                    </div>
+
+                    <div className="text-center text-muted-foreground">
+                      <ArrowRight className="mx-auto" size={20} />
+                      <div className="text-xs mt-1">RIPEMD160(SHA256(public_key))</div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Public Key Hash (Hex)</Label>
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-3 bg-muted rounded font-mono text-sm break-all">
+                          {derivedData.publicKeyHash}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(derivedData.publicKeyHash || '')}
+                          title="Copy"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">20-byte hash used in address generation</div>
+                    </div>
+
+                    <div className="text-center text-muted-foreground">
+                      <ArrowRight className="mx-auto" size={20} />
+                      <div className="text-xs mt-1">Base58Check Encoding</div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Bitcoin Address (P2PKH)</Label>
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
+                          {derivedData.p2pkhAddress}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(derivedData.p2pkhAddress || '')}
+                          title="Copy"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">Pay-to-Public-Key-Hash address</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Information Box */}
+          <div className="p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
+            <h4 className="font-semibold text-amber-900 dark:text-amber-100 mb-2">About Bitcoin Mini Keys</h4>
+            <div className="text-sm text-amber-800 dark:text-amber-200 space-y-2">
+              <p>
+                Mini keys were a compact way to represent Bitcoin private keys, historically used by some applications 
+                like Casascius physical bitcoins. They are 30 characters long and start with 'S'.
+              </p>
+              <p>
+                The format includes a built-in check: SHA256(minikey + '?') must have a first byte of 0x00. 
+                This provides roughly 99.6% rejection of invalid strings.
+              </p>
+              <p className="font-semibold">
+                Note: Mini keys are less common in modern Bitcoin software and are provided here for educational purposes.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
