@@ -34,12 +34,13 @@ export function privateKeyFromWif(wif: string): BitcoinKeyData | null {
   try {
     const keyPair = ECPair.fromWIF(wif)
     const compressed = keyPair.compressed
-    const privateKeyHex = keyPair.privateKey?.toString('hex')
-    const publicKeyHex = keyPair.publicKey.toString('hex')
-    const publicKeyHash = bitcoin.crypto.hash160(keyPair.publicKey).toString('hex')
+    const privateKeyHex = keyPair.privateKey ? Buffer.from(keyPair.privateKey).toString('hex') : undefined
+    const publicKeyHex = Buffer.from(keyPair.publicKey).toString('hex')
+    const hash160Buffer = bitcoin.crypto.hash160(Buffer.from(keyPair.publicKey))
+    const publicKeyHash = Buffer.from(hash160Buffer).toString('hex')
     
     // Generate basic addresses
-    const p2pkh = bitcoin.payments.p2pkh({ pubkey: keyPair.publicKey })
+    const p2pkh = bitcoin.payments.p2pkh({ pubkey: Buffer.from(keyPair.publicKey) })
 
     return {
       privateKeyWif: wif,
@@ -85,7 +86,7 @@ export function decodeWif(wif: string): { privateKeyHex: string; compressed: boo
   try {
     const keyPair = ECPair.fromWIF(wif)
     return {
-      privateKeyHex: keyPair.privateKey!.toString('hex'),
+      privateKeyHex: Buffer.from(keyPair.privateKey!).toString('hex'),
       compressed: keyPair.compressed,
       valid: true
     }
@@ -169,8 +170,8 @@ export function decodeAddress(address: string): { type: string; hash: string; ch
   try {
     const decoded = bs58.decode(address)
     const version = decoded[0]
-    const hash = decoded.subarray(1, -4).toString('hex')
-    const checksum = decoded.subarray(-4).toString('hex')
+    const hash = Buffer.from(decoded.subarray(1, -4)).toString('hex')
+    const checksum = Buffer.from(decoded.subarray(-4)).toString('hex')
     
     let type = 'Unknown'
     if (version === 0x00) type = 'P2PKH'
