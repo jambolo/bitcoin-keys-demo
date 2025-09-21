@@ -1,6 +1,6 @@
 import { Button } from "./components/ui/button";
 
-import { AlertTriangleIcon, RefreshCwIcon } from "lucide-react";
+import { Warning, ArrowsClockwise } from "@phosphor-icons/react";
 
 interface ErrorFallbackProps {
   error: Error
@@ -17,7 +17,7 @@ export const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps)
       <div className="w-full max-w-md">
         <div className="border border-destructive bg-destructive/10 rounded-lg p-4 mb-6">
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangleIcon className="h-4 w-4 text-destructive" />
+            <Warning className="h-4 w-4 text-destructive" />
             <h2 className="font-semibold text-destructive">This spark has encountered a runtime error</h2>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -37,7 +37,7 @@ export const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps)
           className="w-full"
           variant="outline"
         >
-          <RefreshCwIcon />
+          <ArrowsClockwise />
           Try Again
         </Button>
       </div>

@@ -38,7 +38,7 @@ export function PrivateKeyPage() {
   // Validation section
   const [validation, setValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
 
-  // Initialize with random private key if none exists
+  // Initialize with random private key only on first ever load when no private key exists
   useEffect(() => {
     const initializeRandomKey = async () => {
       if (!privateKeyHex) {
@@ -51,7 +51,7 @@ export function PrivateKeyPage() {
     }
     
     initializeRandomKey()
-  }, [privateKeyHex, setPrivateKeyHex])
+  }, []) // Remove dependencies to only run once on mount
 
   // Handle private key hex input
   useEffect(() => {
