@@ -1,19 +1,19 @@
 import * as bitcoin from 'bitcoinjs-lib'
 
-import { useState, useEffect } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { Card, CardContent, CardDescription
+import { Label } from '@/components/ui/labe
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Copy, Shuffle, ArrowRight } from '@phosphor-icons/react'
-import { 
-  generateRandomPrivateKey, 
-  privateKeyFromWif,
-  privateKeyFromHex,
+  validateBitcoinAddress,
+  BitcoinKeyData,
+} from '@/lib/bitcoin'
+
+  // Pers
+  const [hexInput, setHexInp
+  const [hashInput, 
+  const [validationI
   validateBitcoinAddress,
   decodeAddress,
   BitcoinKeyData,
@@ -30,102 +30,102 @@ export function AddressPage() {
   const [addressInput, setAddressInput] = useKV('address-decode-input', '')
   const [validationInput, setValidationInput] = useKV('address-validation-input', '')
 
-  const [derivedData, setDerivedData] = useState<BitcoinKeyData | null>(null)
-  const [decodedAddress, setDecodedAddress] = useState<any>(null)
-  const [validation, setValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
-
-  // Handle derivation inputs
-  useEffect(() => {
-    let data: BitcoinKeyData | null = null
-
-    if (wifInput) {
-      data = privateKeyFromWif(wifInput)
-    } else if (hexInput && isValidHex(hexInput, 64)) {
-      data = privateKeyFromHex(hexInput)
-    } else if (pubkeyInput && isValidHex(pubkeyInput)) {
-      // Generate real addresses from public key
-      try {
-        const pubkeyBuffer = Buffer.from(pubkeyInput, 'hex')
-        const hash160Buffer = bitcoin.crypto.hash160(pubkeyBuffer)
-        const publicKeyHash = Buffer.from(hash160Buffer).toString('hex')
         
-        const p2pkh = bitcoin.payments.p2pkh({ pubkey: pubkeyBuffer })
-        const p2wpkh = bitcoin.payments.p2wpkh({ pubkey: pubkeyBuffer })
-        const p2sh = bitcoin.payments.p2sh({ redeem: p2wpkh })
-        
-        let taprootAddress = 'N/A'
-        try {
-          if (pubkeyBuffer.length === 33) {
-            const p2tr = bitcoin.payments.p2tr({ pubkey: pubkeyBuffer.subarray(1) })
-            taprootAddress = p2tr.address || 'N/A'
-          }
-        } catch {
-          // Taproot generation failed
-        }
-        
-        data = {
           publicKeyHex: pubkeyInput,
-          publicKeyHash,
           p2pkhAddress: p2pkh.address || 'N/A',
-          p2shAddress: p2sh.address || 'N/A',
-          bech32Address: p2wpkh.address || 'N/A',
-          taprootAddress
+
         }
-      } catch {
-        // Invalid public key
-        data = null
+        // Invalid 
       }
-    } else if (hashInput && isValidHex(hashInput, 40)) {
-      // Generate addresses from hash160
-      try {
-        const hashBuffer = Buffer.from(hashInput, 'hex')
-        
-        const p2pkh = bitcoin.payments.p2pkh({ hash: hashBuffer })
-        const p2wpkh = bitcoin.payments.p2wpkh({ hash: hashBuffer })
-        const p2sh = bitcoin.payments.p2sh({ redeem: p2wpkh })
-        
+
+        const hashB
+        const p2pkh = bitcoin.payments.p
+        const p2sh = bitcoin.payments.p2sh({ redeem: p
         data = {
-          publicKeyHash: hashInput,
           p2pkhAddress: p2pkh.address || 'N/A',
-          p2shAddress: p2sh.address || 'N/A',
-          bech32Address: p2wpkh.address || 'N/A',
-          taprootAddress: 'N/A' // Cannot derive taproot from hash160 alone
+          bech32Address: p2wpkh.address || 'N/A'
         }
-      } catch {
         // Invalid hash
-        data = null
       }
-    }
 
-    setDerivedData(data)
-  }, [wifInput, hexInput, pubkeyInput, hashInput])
-
+  }, [wi
   // Auto-populate validation input with generated taproot address
-  useEffect(() => {
-    if (derivedData?.taprootAddress && derivedData.taprootAddress !== 'N/A' && !validationInput) {
-      setValidationInput(derivedData.taprootAddress)
+    if (derivedData?.taprootAddress && derivedData.taprootAddress !== 'N
     }
-  }, [derivedData, validationInput, setValidationInput])
 
-  // Handle address decoding
   useEffect(() => {
-    if (addressInput) {
-      const decoded = decodeAddress(addressInput)
-      setDecodedAddress(decoded)
+      const d
     } else {
-      setDecodedAddress(null)
     }
-  }, [addressInput])
 
-  // Handle validation
-  useEffect(() => {
-    if (validationInput) {
-      const result = validateBitcoinAddress(validationInput)
-      setValidation(result)
+  useEffect
+      const resul
     } else {
-      setValidation({ valid: false })
     }
-  }, [validationInput])
+
+    const random
+    setHexInput('')
+    setHashInput('')
+
+    if (navigator.clipboard) {
+    }
+
+    setWi
+    setPubkeyIn
+  }
+  return (
+      <
+        <p className="text-muted-foreground">
+        </p>
+
+      <Card>
+        
+            Address Derivation
+          <CardDescription>
+          </CardDescription>
+        
+            <Tab
+              <TabsTrigger value="h
+              <TabsTrigger value="hash">Hash</T
+
+              <div className="space-y-2">
+                <div className="flex gap-2">
+         
+               
+                    cla
+                  <
+       
+     
+
+            <TabsContent
+                <Label htmlFor="hex-derivation">Pr
+
+                  onChange={(e) => setHexInput(e.target.value)}
+                  c
+              </div>
+
+     
+                <Input
+
+                  placeholde
+                />
+            </TabsConte
+            <TabsContent value="hash" className="
+                <Label htmlFor="
+            
+                  onChange={(
+     
+              </div>
+
+          {derivedData
+              <Sepa
+              {/* Key Chai
+                <h4 className="font-semibold text-lg">Derive
+                  {derivedD
+            
+                        <code classNa
+     
+                       
 
   const generateRandom = () => {
     const randomWif = generateRandomPrivateKey()
@@ -240,275 +240,275 @@ export function AddressPage() {
             <div className="space-y-6">
               <Separator />
               
-              {/* Key Chain */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-lg">Derived Public Key Hash</h4>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {derivedData.privateKeyWif && (
-                    <div>
-                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Private Key (WIF)</Label>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-2 bg-muted rounded font-mono text-sm break-all">
-                          {derivedData.privateKeyWif}
-                        </code>
-                        <Button variant="outline" size="icon" onClick={() => copyToClipboard(derivedData.privateKeyWif || '')} title="Copy">
-                          <Copy size={16} />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {derivedData.privateKeyHex && (
-                    <div>
-                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Private Key (Hex)</Label>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-2 bg-muted rounded font-mono text-sm break-all">
-                          {derivedData.privateKeyHex}
-                        </code>
-                        <Button variant="outline" size="icon" onClick={() => copyToClipboard(derivedData.privateKeyHex || '')} title="Copy">
-                          <Copy size={16} />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {derivedData.compressed !== undefined && (
-                    <div>
-                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Compression</Label>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={derivedData.compressed ? "default" : "secondary"}>
-                          {derivedData.compressed ? 'Compressed' : 'Uncompressed'}
-                        </Badge>
-                      </div>
-                    </div>
-                  )}
-
-                  {derivedData.publicKeyHex && (
-                    <div>
-                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Public Key</Label>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-2 bg-muted rounded font-mono text-sm break-all">
-                          {derivedData.publicKeyHex}
-                        </code>
-                        <Button variant="outline" size="icon" onClick={() => copyToClipboard(derivedData.publicKeyHex || '')} title="Copy">
-                          <Copy size={16} />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {derivedData.publicKeyHash && (
-                    <div>
-                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Public Key Hash</Label>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-2 bg-muted rounded font-mono text-sm break-all">
-                          {derivedData.publicKeyHash}
-                        </code>
-                        <Button variant="outline" size="icon" onClick={() => copyToClipboard(derivedData.publicKeyHash || '')} title="Copy">
-                          <Copy size={16} />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Addresses */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-lg">Generated Addresses</h4>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">P2PKH (Legacy)</Label>
-                    <div className="flex gap-2">
-                      <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                        {derivedData.p2pkhAddress}
-                      </code>
-                      <Button variant="outline" size="icon" onClick={() => copyToClipboard(derivedData.p2pkhAddress || '')} title="Copy">
-                        <Copy size={16} />
-                      </Button>
-                    </div>
-                    <div className="text-xs text-muted-foreground">Starts with '1' - Pay to Public Key Hash</div>
-                    <div className="flex justify-center mt-2">
-                      <QRCodeDisplay 
-                        value={derivedData.p2pkhAddress || ''} 
-                        title="P2PKH Address" 
-                        size={120}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">P2SH (Script Hash)</Label>
-                    <div className="flex gap-2">
-                      <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                        {derivedData.p2shAddress}
-                      </code>
-                      <Button variant="outline" size="icon" onClick={() => copyToClipboard(derivedData.p2shAddress || '')} title="Copy">
-                        <Copy size={16} />
-                      </Button>
-                    </div>
-                    <div className="text-xs text-muted-foreground">Starts with '3' - Pay to Script Hash</div>
-                    <div className="flex justify-center mt-2">
-                      <QRCodeDisplay 
-                        value={derivedData.p2shAddress || ''} 
-                        title="P2SH Address" 
-                        size={120}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">SEGWIT (P2WSH)</Label>
-                    <div className="flex gap-2">
-                      <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                        {derivedData.bech32Address}
-                      </code>
-                      <Button variant="outline" size="icon" onClick={() => copyToClipboard(derivedData.bech32Address || '')} title="Copy">
-                        <Copy size={16} />
-                      </Button>
-                    </div>
-                    <div className="text-xs text-muted-foreground">Starts with 'bc1q' - Native SegWit</div>
-                    <div className="flex justify-center mt-2">
-                      <QRCodeDisplay 
-                        value={derivedData.bech32Address || ''} 
-                        title="Segwit Address" 
-                        size={120}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Taproot (P2TR)</Label>
-                    <div className="flex gap-2">
-                      <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                        {derivedData.taprootAddress}
-                      </code>
-                      <Button variant="outline" size="icon" onClick={() => copyToClipboard(derivedData.taprootAddress || '')} title="Copy">
-                        <Copy size={16} />
-                      </Button>
-                    </div>
-                    <div className="text-xs text-muted-foreground">Starts with 'bc1p' - Pay to Taproot</div>
-                    <div className="flex justify-center mt-2">
-                      <QRCodeDisplay 
-                        value={derivedData.taprootAddress || ''} 
-                        title="Taproot Address" 
-                        size={120}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Decoding Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ArrowRight className="text-accent" />
-            Address Decoding
-          </CardTitle>
-          <CardDescription>
-            Decode Bitcoin addresses (Legacy, SegWit, and Taproot) to see their components
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="address-decode">Bitcoin Address</Label>
-            <Input
-              id="address-decode"
-              value={addressInput}
-              onChange={(e) => setAddressInput(e.target.value)}
-              placeholder="Enter Bitcoin address (1..., 3..., bc1q..., bc1p...)"
-              className="font-mono text-sm"
-            />
-          </div>
-
-
-
-          {decodedAddress && (
-            <div className="space-y-4">
-              <Separator />
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Address Type</Label>
-                  <Badge className="text-sm">{decodedAddress.type}</Badge>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">
-                      {decodedAddress.witnessVersion !== undefined ? 'Witness Program' : 'Public Key Hash'}
-                    </Label>
-                    <code className="block p-2 bg-muted rounded font-mono text-sm break-all">
-                      {decodedAddress.hash}
-                    </code>
-                  </div>
-                  
-                  {decodedAddress.checksum && (
-                    <div>
-                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Checksum</Label>
-                      <code className="block p-2 bg-muted rounded font-mono text-sm break-all">
-                        {decodedAddress.checksum}
-                      </code>
-                    </div>
-                  )}
-                  
-                  {decodedAddress.witnessVersion !== undefined && (
-                    <div>
-                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Witness Version</Label>
-                      <Badge variant="secondary">{decodedAddress.witnessVersion}</Badge>
-                    </div>
-                  )}
-                </div>
-                
-                {decodedAddress.witnessVersion !== undefined && (
-                  <div className="p-4 bg-accent/10 rounded-lg border border-accent/20">
-                    <h5 className="font-medium text-sm mb-2">SegWit Address Details</h5>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Format:</span>
-                        <span>Bech32{decodedAddress.witnessVersion === 1 ? 'm' : ''}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Program Length:</span>
-                        <span>{decodedAddress.hash.length / 2} bytes</span>
-                      </div>
-                      {decodedAddress.witnessVersion === 0 && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Script Type:</span>
-                          <span>{decodedAddress.hash.length === 40 ? 'P2WPKH' : 'P2WSH'}</span>
                         </div>
+                      {decodedAddress.wit
+                          <span className="text-muted-foreground">Script Type:</sp
+                        </div>
+                    </div>
+                )}
+            </div>
+        </CardContent>
+
+      <Card>
+          <CardTitle className=
+            Address Validation
+          <CardDescription>
+          </CardDescription>
+        <CardContent classNa
+            <Label htmlFor
+              id="ad
+
+              className="font-mono text-sm"
+          </div>
+          {validationInput && (
+              <Label className="text-xs uppercase 
+                <Badge variant={validation.valid ? "default" : "destructive"}>
+                </Badge>
+                  <span classNa
+              </div>
+          )}
+      </Card>
+  )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                       )}
                       {decodedAddress.witnessVersion === 1 && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Script Type:</span>
                           <span>Pay-to-Taproot</span>
-                        </div>
+
                       )}
-                    </div>
+
                   </div>
-                )}
+
               </div>
-            </div>
+
           )}
-        </CardContent>
+
       </Card>
 
       {/* Validation Section */}
-      <Card>
+
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ArrowRight className="text-accent" />
-            Address Validation
+
           </CardTitle>
-          <CardDescription>
+
             Validate any string as a potential Bitcoin address
-          </CardDescription>
+
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -518,25 +518,25 @@ export function AddressPage() {
               value={validationInput}
               onChange={(e) => setValidationInput(e.target.value)}
               placeholder="Enter any string to validate as Bitcoin address"
-              className="font-mono text-sm"
-            />
-          </div>
 
-          {validationInput && (
+            />
+
+
+
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-wide text-muted-foreground">Validation Result</Label>
               <div className="flex items-center gap-2">
-                <Badge variant={validation.valid ? "default" : "destructive"}>
+
                   {validation.valid ? 'Valid' : 'Invalid'}
-                </Badge>
+
                 {validation.error && (
                   <span className="text-sm text-destructive">{validation.error}</span>
                 )}
-              </div>
+
             </div>
-          )}
+
         </CardContent>
-      </Card>
+
     </div>
-  )
+
 }
