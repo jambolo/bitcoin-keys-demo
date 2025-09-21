@@ -1,6 +1,6 @@
 # Bitcoin Address Demo
 
-A comprehensive educational tool that demonstrates Bitcoin cryptography through interactive pages covering key generation, encoding, and address derivation.
+A comprehensive educational tool that demonstrates Bitcoin address and key concepts through interactive pages covering key generation, encoding, and address derivation.
 
 **Experience Qualities**:
 1. Educational - Clear step-by-step demonstrations of cryptographic processes with visual breakdowns
