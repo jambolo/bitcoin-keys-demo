@@ -1,19 +1,16 @@
-import * as bitcoin from 'bitcoinjs-lib'
-
-import { Card, CardContent, CardDescription
-import { Label } from '@/components/ui/labe
+import { useState, useEffect } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-  validateBitcoinAddress,
-  BitcoinKeyData,
-} from '@/lib/bitcoin'
-
-  // Pers
-  const [hexInput, setHexInp
-  const [hashInput, 
-  const [validationI
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Copy, Shuffle, ArrowRight } from '@phosphor-icons/react'
+import { 
+  generateRandomPrivateKey,
+  privateKeyFromWif,
+  privateKeyFromHex,
   validateBitcoinAddress,
   decodeAddress,
   BitcoinKeyData,
@@ -30,104 +27,23 @@ export function AddressPage() {
   const [addressInput, setAddressInput] = useKV('address-decode-input', '')
   const [validationInput, setValidationInput] = useKV('address-validation-input', '')
 
-        
-          publicKeyHex: pubkeyInput,
-          p2pkhAddress: p2pkh.address || 'N/A',
+  // Derived data state
+  const [derivedData, setDerivedData] = useState<BitcoinKeyData | null>(null)
+  const [decodedAddress, setDecodedAddress] = useState<any>(null)
+  const [validationResult, setValidationResult] = useState<{ isValid: boolean; error?: string } | null>(null)
 
-        }
-        // Invalid 
-      }
+  // Shared state - get taproot address from other pages if available
+  const [sharedTaprootAddress] = useKV('shared-taproot-address', '')
 
-        const hashB
-        const p2pkh = bitcoin.payments.p
-        const p2sh = bitcoin.payments.p2sh({ redeem: p
-        data = {
-          p2pkhAddress: p2pkh.address || 'N/A',
-          bech32Address: p2wpkh.address || 'N/A'
-        }
-        // Invalid hash
-      }
-
-  }, [wi
-  // Auto-populate validation input with generated taproot address
-    if (derivedData?.taprootAddress && derivedData.taprootAddress !== 'N
-    }
-
+  // Auto-populate validation input with shared taproot address
   useEffect(() => {
-      const d
-    } else {
+    if (sharedTaprootAddress && sharedTaprootAddress !== 'N/A' && !validationInput) {
+      setValidationInput(sharedTaprootAddress)
     }
+  }, [sharedTaprootAddress, validationInput, setValidationInput])
 
-  useEffect
-      const resul
-    } else {
-    }
-
-    const random
-    setHexInput('')
-    setHashInput('')
-
-    if (navigator.clipboard) {
-    }
-
-    setWi
-    setPubkeyIn
-  }
-  return (
-      <
-        <p className="text-muted-foreground">
-        </p>
-
-      <Card>
-        
-            Address Derivation
-          <CardDescription>
-          </CardDescription>
-        
-            <Tab
-              <TabsTrigger value="h
-              <TabsTrigger value="hash">Hash</T
-
-              <div className="space-y-2">
-                <div className="flex gap-2">
-         
-               
-                    cla
-                  <
-       
-     
-
-            <TabsContent
-                <Label htmlFor="hex-derivation">Pr
-
-                  onChange={(e) => setHexInput(e.target.value)}
-                  c
-              </div>
-
-     
-                <Input
-
-                  placeholde
-                />
-            </TabsConte
-            <TabsContent value="hash" className="
-                <Label htmlFor="
-            
-                  onChange={(
-     
-              </div>
-
-          {derivedData
-              <Sepa
-              {/* Key Chai
-                <h4 className="font-semibold text-lg">Derive
-                  {derivedD
-            
-                        <code classNa
-     
-                       
-
-  const generateRandom = () => {
+  // Generate random key
+  const handleRandomKey = () => {
     const randomWif = generateRandomPrivateKey()
     setWifInput(randomWif)
     setHexInput('')
@@ -135,408 +51,346 @@ export function AddressPage() {
     setHashInput('')
   }
 
-  const copyToClipboard = (text: string) => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).catch(console.error)
-    }
-  }
+  // Derive all data from any valid input
+  useEffect(() => {
+    let data: BitcoinKeyData | null = null
 
-  const clearInputs = () => {
-    setWifInput('')
-    setHexInput('')
-    setPubkeyInput('')
-    setHashInput('')
+    // Try WIF first
+    if (wifInput) {
+      data = privateKeyFromWif(wifInput)
+      if (data) {
+        setHexInput(data.privateKeyHex || '')
+        setPubkeyInput(data.publicKeyHex || '')
+        setHashInput(data.publicKeyHash || '')
+      }
+    }
+    // Try hex private key
+    else if (hexInput && isValidHex(hexInput, 64)) {
+      data = privateKeyFromHex(hexInput)
+      if (data) {
+        setWifInput(data.privateKeyWif || '')
+        setPubkeyInput(data.publicKeyHex || '')
+        setHashInput(data.publicKeyHash || '')
+      }
+    }
+    // Try public key
+    else if (pubkeyInput && isValidHex(pubkeyInput)) {
+      if (pubkeyInput.length === 66 || pubkeyInput.length === 130) {
+        // Create a minimal data object from public key
+        data = {
+          publicKeyHex: pubkeyInput,
+          // We can't derive addresses from just public key without more complex logic
+          p2pkhAddress: 'N/A',
+          p2shAddress: 'N/A',
+          bech32Address: 'N/A',
+          taprootAddress: 'N/A'
+        }
+      }
+    }
+    // Try public key hash
+    else if (hashInput && isValidHex(hashInput, 40)) {
+      // Create addresses from public key hash
+      data = {
+        publicKeyHash: hashInput,
+        p2pkhAddress: 'N/A', // Would need bitcoin.payments.p2pkh
+        p2shAddress: 'N/A',
+        bech32Address: 'N/A',
+        taprootAddress: 'N/A'
+      }
+    }
+
+    setDerivedData(data)
+
+    // Share taproot address with other components
+    if (data?.taprootAddress && data.taprootAddress !== 'N/A') {
+      // Use useKV hook to share data
+      setValidationInput(data.taprootAddress)
+    }
+  }, [wifInput, hexInput, pubkeyInput, hashInput, setHexInput, setPubkeyInput, setHashInput, setWifInput])
+
+  // Decode address
+  useEffect(() => {
+    if (addressInput) {
+      try {
+        const decoded = decodeAddress(addressInput)
+        setDecodedAddress(decoded)
+      } catch (error) {
+        setDecodedAddress(null)
+      }
+    } else {
+      setDecodedAddress(null)
+    }
+  }, [addressInput])
+
+  // Validate address
+  useEffect(() => {
+    if (validationInput) {
+      const result = validateBitcoinAddress(validationInput)
+      setValidationResult({ isValid: result.valid, error: result.error })
+    } else {
+      setValidationResult(null)
+    }
+  }, [validationInput])
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
   }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold mb-2">Address</h2>
-        <p className="text-muted-foreground">
-          Generate Bitcoin addresses from keys and decode existing addresses.
-        </p>
-      </div>
-
-      {/* Derivation Section */}
+    <div className="space-y-6">
+      {/* Address Derivation */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ArrowRight className="text-accent" />
             Address Derivation
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRandomKey}
+              className="ml-auto"
+            >
+              <Shuffle size={16} className="mr-1" />
+              Random
+            </Button>
           </CardTitle>
           <CardDescription>
-            Generate Bitcoin addresses from private keys, public keys, or hashes
+            Generate Bitcoin addresses from private keys, public keys, or public key hashes
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <Tabs defaultValue="wif" className="w-full">
-            <TabsList className="grid grid-cols-4 w-full">
-              <TabsTrigger value="wif">WIF</TabsTrigger>
-              <TabsTrigger value="hex">Private Key</TabsTrigger>
-              <TabsTrigger value="pubkey">Public Key</TabsTrigger>
-              <TabsTrigger value="hash">Hash</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="wif" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="wif-derivation">Private Key (WIF)</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="wif-derivation"
-                    value={wifInput}
-                    onChange={(e) => setWifInput(e.target.value)}
-                    placeholder="Enter WIF format private key"
-                    className="font-mono text-sm"
-                  />
-                  <Button variant="outline" size="icon" onClick={generateRandom} title="Generate Random">
-                    <Shuffle size={16} />
-                  </Button>
-                  <Button variant="outline" onClick={clearInputs}>Clear</Button>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="hex" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="hex-derivation">Private Key (Hex)</Label>
-                <Input
-                  id="hex-derivation"
-                  value={hexInput}
-                  onChange={(e) => setHexInput(e.target.value)}
-                  placeholder="64 character hexadecimal private key"
-                  className="font-mono text-sm"
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="pubkey" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="pubkey-derivation">Public Key (Hex)</Label>
-                <Input
-                  id="pubkey-derivation"
-                  value={pubkeyInput}
-                  onChange={(e) => setPubkeyInput(e.target.value)}
-                  placeholder="66 or 130 character hexadecimal public key"
-                  className="font-mono text-sm"
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="hash" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="hash-derivation">Public Key Hash (Hex)</Label>
-                <Input
-                  id="hash-derivation"
-                  value={hashInput}
-                  onChange={(e) => setHashInput(e.target.value)}
-                  placeholder="40 character hexadecimal hash"
-                  className="font-mono text-sm"
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="wif-input">Private Key (WIF)</Label>
+              <Input
+                id="wif-input"
+                value={wifInput}
+                onChange={(e) => setWifInput(e.target.value)}
+                placeholder="Enter WIF private key..."
+                className="font-mono text-xs"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hex-input">Private Key (Hex)</Label>
+              <Input
+                id="hex-input"
+                value={hexInput}
+                onChange={(e) => setHexInput(e.target.value)}
+                placeholder="Enter hex private key..."
+                className="font-mono text-xs"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pubkey-input">Public Key (Hex)</Label>
+              <Input
+                id="pubkey-input"
+                value={pubkeyInput}
+                onChange={(e) => setPubkeyInput(e.target.value)}
+                placeholder="Enter public key..."
+                className="font-mono text-xs"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hash-input">Derived Public Key Hash (Hex)</Label>
+              <Input
+                id="hash-input"
+                value={hashInput}
+                onChange={(e) => setHashInput(e.target.value)}
+                placeholder="Enter public key hash..."
+                className="font-mono text-xs"
+              />
+            </div>
+          </div>
 
           {derivedData && (
-            <div className="space-y-6">
+            <>
               <Separator />
-              
-                        </div>
-                      {decodedAddress.wit
-                          <span className="text-muted-foreground">Script Type:</sp
-                        </div>
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Generated Addresses</h4>
+                <div className="grid gap-4">
+                  {derivedData.p2pkhAddress && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs text-muted-foreground">P2PKH (Legacy)</Label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(derivedData.p2pkhAddress!)}
+                        >
+                          <Copy size={14} />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          value={derivedData.p2pkhAddress}
+                          readOnly
+                          className="font-mono text-xs"
+                        />
+                        <QRCodeDisplay value={derivedData.p2pkhAddress} title="P2PKH Address" size={40} />
+                      </div>
                     </div>
-                )}
-            </div>
+                  )}
+
+                  {derivedData.p2shAddress && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs text-muted-foreground">P2SH</Label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(derivedData.p2shAddress!)}
+                        >
+                          <Copy size={14} />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          value={derivedData.p2shAddress}
+                          readOnly
+                          className="font-mono text-xs"
+                        />
+                        <QRCodeDisplay value={derivedData.p2shAddress} title="P2SH Address" size={40} />
+                      </div>
+                    </div>
+                  )}
+
+                  {derivedData.bech32Address && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs text-muted-foreground">SEGWIT (P2WPKH)</Label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(derivedData.bech32Address!)}
+                        >
+                          <Copy size={14} />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          value={derivedData.bech32Address}
+                          readOnly
+                          className="font-mono text-xs"
+                        />
+                        <QRCodeDisplay value={derivedData.bech32Address} title="Segwit Address" size={40} />
+                      </div>
+                    </div>
+                  )}
+
+                  {derivedData.taprootAddress && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs text-muted-foreground">Taproot (P2TR)</Label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(derivedData.taprootAddress!)}
+                        >
+                          <Copy size={14} />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          value={derivedData.taprootAddress}
+                          readOnly
+                          className="font-mono text-xs"
+                        />
+                        <QRCodeDisplay value={derivedData.taprootAddress} title="Taproot Address" size={40} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
+      </Card>
 
+      {/* Address Decoding */}
       <Card>
-          <CardTitle className=
-            Address Validation
-          <CardDescription>
-          </CardDescription>
-        <CardContent classNa
-            <Label htmlFor
-              id="ad
-
-              className="font-mono text-sm"
-          </div>
-          {validationInput && (
-              <Label className="text-xs uppercase 
-                <Badge variant={validation.valid ? "default" : "destructive"}>
-                </Badge>
-                  <span classNa
-              </div>
-          )}
-      </Card>
-  )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                      )}
-                      {decodedAddress.witnessVersion === 1 && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Script Type:</span>
-                          <span>Pay-to-Taproot</span>
-
-                      )}
-
-                  </div>
-
-              </div>
-
-          )}
-
-      </Card>
-
-      {/* Validation Section */}
-
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ArrowRight className="text-accent" />
-
-          </CardTitle>
-
-            Validate any string as a potential Bitcoin address
-
+          <CardTitle>Address Decoding</CardTitle>
+          <CardDescription>
+            Decode Bitcoin addresses to see their components
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="address-validation">String to Validate</Label>
+            <Label htmlFor="address-input">Bitcoin Address</Label>
             <Input
-              id="address-validation"
+              id="address-input"
+              value={addressInput}
+              onChange={(e) => setAddressInput(e.target.value)}
+              placeholder="Enter Bitcoin address to decode..."
+              className="font-mono text-xs"
+            />
+          </div>
+
+          {decodedAddress && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium">Decoded Components</h4>
+                <div className="grid gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Address Type</Label>
+                    <div className="font-mono text-sm">{decodedAddress.type}</div>
+                  </div>
+                  {decodedAddress.hash && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Public Key Hash</Label>
+                      <div className="font-mono text-xs break-all">{decodedAddress.hash}</div>
+                    </div>
+                  )}
+                  {decodedAddress.checksum && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Checksum</Label>
+                      <div className="font-mono text-xs">{decodedAddress.checksum}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Address Validation */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Address Validation</CardTitle>
+          <CardDescription>
+            Validate Bitcoin addresses for correctness
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="validation-input">Address to Validate</Label>
+            <Input
+              id="validation-input"
               value={validationInput}
               onChange={(e) => setValidationInput(e.target.value)}
-              placeholder="Enter any string to validate as Bitcoin address"
-
+              placeholder="Enter address to validate..."
+              className="font-mono text-xs"
             />
+          </div>
 
-
-
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Validation Result</Label>
+          {validationResult && (
+            <>
+              <Separator />
               <div className="flex items-center gap-2">
-
-                  {validation.valid ? 'Valid' : 'Invalid'}
-
-                {validation.error && (
-                  <span className="text-sm text-destructive">{validation.error}</span>
+                <Badge variant={validationResult.isValid ? "default" : "destructive"}>
+                  {validationResult.isValid ? "Valid" : "Invalid"}
+                </Badge>
+                {validationResult.error && (
+                  <span className="text-sm text-muted-foreground">
+                    {validationResult.error}
+                  </span>
                 )}
-
-            </div>
-
+              </div>
+            </>
+          )}
         </CardContent>
-
+      </Card>
     </div>
-
+  )
 }
