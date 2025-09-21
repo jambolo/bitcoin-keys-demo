@@ -351,7 +351,7 @@ export function AddressPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Bech32 (SegWit)</Label>
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">SEGWIT (P2WSH)</Label>
                     <div className="flex gap-2">
                       <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
                         {derivedData.bech32Address}
