@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Copy, Shuffle, ArrowRight } from '@phosphor-icons/react'
+import { Copy, Shuffle, ArrowRight, Sparkle } from '@phosphor-icons/react'
 import { 
   generateMiniKey, 
   validateMiniKey,
@@ -62,11 +62,87 @@ export function MiniKeyPage() {
       <div className="text-center">
         <h2 className="text-3xl font-bold mb-2">Mini Key</h2>
         <p className="text-muted-foreground">
-          Demonstrates Bitcoin mini private key validation and key derivation.
+          Demonstrates Bitcoin mini private key generation, validation and key derivation.
         </p>
       </div>
 
-      {/* Mini Key Section */}
+      {/* Mini Key Generation Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkle className="text-accent" />
+            Mini Key Generation
+          </CardTitle>
+          <CardDescription>
+            Generate a valid 30-character Bitcoin mini key that passes all validation checks
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div className="text-center">
+              <Button
+                onClick={generateRandom}
+                className="w-full"
+                size="lg"
+              >
+                <Sparkle className="mr-2" size={16} />
+                Generate Random Mini Key
+              </Button>
+              <div className="text-xs text-muted-foreground mt-2">
+                Creates a cryptographically valid mini key and populates the derivation section below
+              </div>
+            </div>
+
+            {miniKeyInput && (
+              <div className="space-y-2">
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Generated Mini Key</Label>
+                <div className="flex gap-2">
+                  <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
+                    {miniKeyInput}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => copyToClipboard(miniKeyInput)}
+                    title="Copy"
+                  >
+                    <Copy size={16} />
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  This mini key has been automatically populated in the derivation section below
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Information Box */}
+          <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Mini Key Format Requirements</h4>
+            <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+              <div className="flex items-center gap-2">
+                <span>•</span>
+                <span>Exactly 30 characters long</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>•</span>
+                <span>Must start with the character 'S'</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>•</span>
+                <span>All characters must be from the Base58 alphabet</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>•</span>
+                <span>Must pass cryptographic check: SHA256(minikey + '?') first byte = 0</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Mini Key Derivation Section */}
+      {/* Mini Key Derivation Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -74,7 +150,7 @@ export function MiniKeyPage() {
             Mini Key Derivation
           </CardTitle>
           <CardDescription>
-            Enter a 30-character Bitcoin mini key to derive the full key chain
+            Enter or use the generated mini key above to derive the full key chain
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -85,7 +161,7 @@ export function MiniKeyPage() {
                 id="mini-key-input"
                 value={miniKeyInput}
                 onChange={(e) => setMiniKeyInput(e.target.value)}
-                placeholder="30-character mini key starting with 'S'"
+                placeholder="30-character mini key starting with 'S' (or use generator above)"
                 className="font-mono text-sm"
                 maxLength={30}
               />
@@ -99,7 +175,7 @@ export function MiniKeyPage() {
               </Button>
             </div>
             <div className="text-xs text-muted-foreground">
-              Mini keys are exactly 30 characters long and start with 'S'
+              Mini keys are exactly 30 characters long and start with 'S'. Use the generator above or enter manually.
             </div>
           </div>
 

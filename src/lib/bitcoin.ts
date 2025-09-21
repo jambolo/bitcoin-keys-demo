@@ -240,11 +240,34 @@ export function decodeAddress(address: string): {
 
 export function generateMiniKey(): string {
   const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-  let miniKey: string
   
-  // Simple implementation for demo
-  miniKey = 'S6c56bnXQiBjk9mqSYE7ykVQ7NzrRy'
-  return miniKey
+  // Generate random mini keys until we find one that passes the check
+  let attempts = 0
+  const maxAttempts = 10000
+  
+  while (attempts < maxAttempts) {
+    // Start with 'S' and generate 29 random characters
+    let miniKey = 'S'
+    for (let i = 0; i < 29; i++) {
+      miniKey += chars[Math.floor(Math.random() * chars.length)]
+    }
+    
+    // Check if this mini key passes the cryptographic test
+    try {
+      const checkStr = miniKey + '?'
+      const hash = bitcoin.crypto.sha256(Buffer.from(checkStr, 'utf8'))
+      if (hash[0] === 0) {
+        return miniKey
+      }
+    } catch (error) {
+      // Continue trying if there's an error
+    }
+    
+    attempts++
+  }
+  
+  // Fallback to known good mini key if generation fails
+  return 'S6c56bnXQiBjk9mqSYE7ykVQ7NzrRy'
 }
 
 export function validateMiniKey(miniKey: string): { valid: boolean; error?: string } {
@@ -261,13 +284,18 @@ export function validateMiniKey(miniKey: string): { valid: boolean; error?: stri
     return { valid: false, error: 'Invalid: All characters must be in the base58 alphabet' }
   }
   
-  // For demo purposes, accept known good mini keys
-  const knownGoodMiniKeys = ['S6c56bnXQiBjk9mqSYE7ykVQ7NzrRy']
-  if (knownGoodMiniKeys.includes(miniKey)) {
-    return { valid: true }
+  // Perform the cryptographic check: SHA256(minikey + '?') first byte must be 0
+  try {
+    const checkStr = miniKey + '?'
+    const hash = bitcoin.crypto.sha256(Buffer.from(checkStr, 'utf8'))
+    if (hash[0] !== 0) {
+      return { valid: false, error: 'Invalid: Check failed' }
+    }
+  } catch (error) {
+    return { valid: false, error: 'Invalid: Check failed' }
   }
   
-  return { valid: false, error: 'Invalid: Check failed' }
+  return { valid: true }
 }
 
 export function miniKeyToPrivateKey(miniKey: string): string | null {
