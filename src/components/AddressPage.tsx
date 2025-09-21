@@ -364,7 +364,7 @@ export function AddressPage() {
                     <div className="flex justify-center mt-2">
                       <QRCodeDisplay 
                         value={derivedData.bech32Address || ''} 
-                        title="Bech32 Address" 
+                        title="Segwit Address" 
                         size={120}
                       />
                     </div>
