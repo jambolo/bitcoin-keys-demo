@@ -163,122 +163,123 @@ export function PrivateKeyPage() {
             <div className="space-y-6">
               <Separator />
               
-              {/* Compressed WIF */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-lg">Compressed WIF Process</h4>
-                {compressedSteps && (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 1: Add Prefix & Compression Flag</Label>
-                        <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
-                          {compressedSteps.step1}
-                        </code>
-                      </div>
-                      <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 2: Double SHA256 Hash</Label>
-                        <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
-                          {compressedSteps.step2}
-                        </code>
-                      </div>
-                      <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 3: Checksum (First 4 bytes)</Label>
-                        <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
-                          {compressedSteps.step3}
-                        </code>
-                      </div>
-                      <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 4: Add Checksum</Label>
-                        <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
-                          {compressedSteps.step4}
-                        </code>
-                      </div>
-                    </div>
-                    <div className="flex gap-4 items-start">
-                      <div className="flex-1">
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Final: Base58 Encoded WIF (Compressed)</Label>
-                        <div className="flex gap-2">
-                          <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                            {compressedWif}
+              {/* Side-by-side WIF Process sections */}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                {/* Compressed WIF */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-lg">Compressed WIF Process</h4>
+                  {compressedSteps && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 1: Add Prefix & Compression Flag</Label>
+                          <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
+                            {compressedSteps.step1}
                           </code>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => copyToClipboard(compressedWif)}
-                            title="Copy"
-                          >
-                            <Copy size={16} />
-                          </Button>
+                        </div>
+                        <div>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 2: Double SHA256 Hash</Label>
+                          <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
+                            {compressedSteps.step2}
+                          </code>
+                        </div>
+                        <div>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 3: Checksum (First 4 bytes)</Label>
+                          <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
+                            {compressedSteps.step3}
+                          </code>
+                        </div>
+                        <div>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 4: Add Checksum</Label>
+                          <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
+                            {compressedSteps.step4}
+                          </code>
                         </div>
                       </div>
-                      <QRCodeDisplay 
-                        value={compressedWif} 
-                        title="Compressed WIF" 
-                        size={100}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <Separator />
-
-              {/* Uncompressed WIF */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-lg">Uncompressed WIF Process</h4>
-                {uncompressedSteps && (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 1: Add Prefix</Label>
-                        <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
-                          {uncompressedSteps.step1}
-                        </code>
-                      </div>
-                      <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 2: Double SHA256 Hash</Label>
-                        <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
-                          {uncompressedSteps.step2}
-                        </code>
-                      </div>
-                      <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 3: Checksum (First 4 bytes)</Label>
-                        <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
-                          {uncompressedSteps.step3}
-                        </code>
-                      </div>
-                      <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 4: Add Checksum</Label>
-                        <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
-                          {uncompressedSteps.step4}
-                        </code>
+                      <div className="flex gap-4 items-start">
+                        <div className="flex-1">
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Final: Base58 Encoded WIF (Compressed)</Label>
+                          <div className="flex gap-2">
+                            <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
+                              {compressedWif}
+                            </code>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => copyToClipboard(compressedWif)}
+                              title="Copy"
+                            >
+                              <Copy size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                        <QRCodeDisplay 
+                          value={compressedWif} 
+                          title="Compressed WIF" 
+                          size={100}
+                        />
                       </div>
                     </div>
-                    <div className="flex gap-4 items-start">
-                      <div className="flex-1">
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Final: Base58 Encoded WIF (Uncompressed)</Label>
-                        <div className="flex gap-2">
-                          <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                            {uncompressedWif}
+                  )}
+                </div>
+
+                {/* Uncompressed WIF */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-lg">Uncompressed WIF Process</h4>
+                  {uncompressedSteps && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 1: Add Prefix</Label>
+                          <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
+                            {uncompressedSteps.step1}
                           </code>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => copyToClipboard(uncompressedWif)}
-                            title="Copy"
-                          >
-                            <Copy size={16} />
-                          </Button>
+                        </div>
+                        <div>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 2: Double SHA256 Hash</Label>
+                          <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
+                            {uncompressedSteps.step2}
+                          </code>
+                        </div>
+                        <div>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 3: Checksum (First 4 bytes)</Label>
+                          <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
+                            {uncompressedSteps.step3}
+                          </code>
+                        </div>
+                        <div>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 4: Add Checksum</Label>
+                          <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
+                            {uncompressedSteps.step4}
+                          </code>
                         </div>
                       </div>
-                      <QRCodeDisplay 
-                        value={uncompressedWif} 
-                        title="Uncompressed WIF" 
-                        size={100}
-                      />
+                      <div className="flex gap-4 items-start">
+                        <div className="flex-1">
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Final: Base58 Encoded WIF (Uncompressed)</Label>
+                          <div className="flex gap-2">
+                            <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
+                              {uncompressedWif}
+                            </code>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => copyToClipboard(uncompressedWif)}
+                              title="Copy"
+                            >
+                              <Copy size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                        <QRCodeDisplay 
+                          value={uncompressedWif} 
+                          title="Uncompressed WIF" 
+                          size={100}
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           )}
