@@ -1,3 +1,6 @@
+// Import polyfills first, before any other dependencies
+import '@/lib/polyfills'
+
 import * as bitcoin from 'bitcoinjs-lib'
 import * as bip39 from 'bip39'
 import bs58 from 'bs58'

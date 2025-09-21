@@ -23,10 +23,19 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': resolve(projectRoot, 'src')
+      '@': resolve(projectRoot, 'src'),
+      buffer: 'buffer',
+      crypto: 'crypto-browserify',
+      stream: 'stream-browserify',
+      process: 'process/browser',
     }
   },
   optimizeDeps: {
-    exclude: ['tiny-secp256k1']
+    exclude: ['tiny-secp256k1'],
+    include: ['buffer', 'crypto-browserify', 'stream-browserify', 'process']
+  },
+  define: {
+    global: 'globalThis',
+    'process.env': {},
   }
 });
