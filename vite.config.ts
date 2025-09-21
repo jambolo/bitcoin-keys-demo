@@ -22,4 +22,10 @@ export default defineConfig({
       '@': resolve(projectRoot, 'src')
     }
   },
+  define: {
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    include: ['bitcoinjs-lib', 'bip39', 'bs58', 'ecpair', 'bip32', 'tiny-secp256k1']
+  }
 });

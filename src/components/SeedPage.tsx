@@ -12,6 +12,9 @@ import { Copy, Shuffle, ArrowRight, Key } from '@phosphor-icons/react'
 import * as bip39 from 'bip39'
 import { BIP32Factory } from 'bip32'
 import * as ecc from 'tiny-secp256k1'
+import { 
+  privateKeyFromHex as importedPrivateKeyFromHex
+} from '@/lib/bitcoin'
 import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 const bip32 = BIP32Factory(ecc)
@@ -35,6 +38,62 @@ export function SeedPage() {
     privateKey: string
     address: string
   }>>([])
+
+  // Generate derived keys function
+  const generateDerivedKeys = (basePath: string, masterNode: any) => {
+    const derived: Array<{
+      path: string
+      privateKey: string
+      address: string
+    }> = []
+    
+    // Parse the purpose from the path to determine address type
+    const pathMatch = basePath.match(/^m\/(\d+)'\//)
+    const purpose = pathMatch ? parseInt(pathMatch[1]) : 44
+    
+    try {
+      const accountNode = masterNode.derivePath(basePath)
+      const changeNode = accountNode.derivePath('0') // External chain (0)
+      
+      for (let i = 0; i < 5; i++) {
+        const addressNode = changeNode.derivePath(i.toString())
+        const privateKeyHex = addressNode.privateKey ? Buffer.from(addressNode.privateKey).toString('hex') : ''
+        
+        // Generate appropriate address type based on purpose
+        const keyData = importedPrivateKeyFromHex(privateKeyHex)
+        let address = 'Error generating address'
+        
+        if (keyData) {
+          switch (purpose) {
+            case 44: // Legacy P2PKH
+              address = keyData.p2pkhAddress || 'Error generating address'
+              break
+            case 49: // Segwit P2SH-wrapped
+              address = keyData.p2shAddress || 'Error generating address'
+              break
+            case 84: // Native Segwit P2WPKH
+              address = keyData.bech32Address || 'Error generating address'
+              break
+            case 86: // Taproot P2TR
+              address = keyData.taprootAddress || 'Error generating address'
+              break
+            default:
+              address = keyData.p2pkhAddress || 'Error generating address'
+          }
+        }
+        
+        derived.push({
+          path: `${basePath}/0/${i}`,
+          privateKey: privateKeyHex,
+          address: address
+        })
+      }
+    } catch (error) {
+      console.error('Error deriving keys:', error)
+    }
+    
+    setDerivedKeys(derived)
+  }
 
   // Validate seed phrase
   useEffect(() => {
@@ -60,85 +119,40 @@ export function SeedPage() {
       
       // Generate master seed and keys regardless of BIP-39 validity
       // Many wallets accept invalid seed phrases but show warnings
-      const seed = bip39.mnemonicToSeedSync(seedPhrase)
-      setMasterSeed(seed.toString('hex'))
-      
-      // Generate proper BIP-32 master keys
-      const masterNode = bip32.fromSeed(seed)
-      
-      // Generate master xpriv/xpub (at root level m/)
-      setXpriv(masterNode.toBase58())
-      setXpub(masterNode.neutered().toBase58())
-      
-      // Generate ypriv/ypub (m/49'/0'/0' for P2SH-P2WPKH)
-      const segwitNode = masterNode.derivePath("m/49'/0'/0'")
-      setYpriv(segwitNode.toBase58())
-      setYpub(segwitNode.neutered().toBase58())
-      
-      // Generate zpriv/zpub (m/84'/0'/0' for P2WPKH)
-      const nativeSegwitNode = masterNode.derivePath("m/84'/0'/0'")
-      setZpriv(nativeSegwitNode.toBase58())
-      setZpub(nativeSegwitNode.neutered().toBase58())
-      
-      // Generate derived keys based on derivation path
-      const generateDerivedKeys = async (basePath: string) => {
-        const { privateKeyFromHex } = await import('@/lib/bitcoin')
+      try {
+        const seed = bip39.mnemonicToSeedSync(seedPhrase)
+        setMasterSeed(seed.toString('hex'))
         
-        const derived: Array<{
-          path: string
-          privateKey: string
-          address: string
-        }> = []
+        // Generate proper BIP-32 master keys
+        const masterNode = bip32.fromSeed(seed)
         
-        // Parse the purpose from the path to determine address type
-        const pathMatch = basePath.match(/^m\/(\d+)'\//)
-        const purpose = pathMatch ? parseInt(pathMatch[1]) : 44
+        // Generate master xpriv/xpub (at root level m/)
+        setXpriv(masterNode.toBase58())
+        setXpub(masterNode.neutered().toBase58())
         
-        try {
-          const accountNode = masterNode.derivePath(basePath)
-          const changeNode = accountNode.derivePath('0') // External chain (0)
-          
-          for (let i = 0; i < 5; i++) {
-            const addressNode = changeNode.derivePath(i.toString())
-            const privateKeyHex = addressNode.privateKey ? Buffer.from(addressNode.privateKey).toString('hex') : ''
-            
-            // Generate appropriate address type based on purpose
-            const keyData = privateKeyFromHex(privateKeyHex)
-            let address = 'Error generating address'
-            
-            if (keyData) {
-              switch (purpose) {
-                case 44: // Legacy P2PKH
-                  address = keyData.p2pkhAddress || 'Error generating address'
-                  break
-                case 49: // Segwit P2SH-wrapped
-                  address = keyData.p2shAddress || 'Error generating address'
-                  break
-                case 84: // Native Segwit P2WPKH
-                  address = keyData.bech32Address || 'Error generating address'
-                  break
-                case 86: // Taproot P2TR
-                  address = keyData.taprootAddress || 'Error generating address'
-                  break
-                default:
-                  address = keyData.p2pkhAddress || 'Error generating address'
-              }
-            }
-            
-            derived.push({
-              path: `${basePath}/0/${i}`,
-              privateKey: privateKeyHex,
-              address: address
-            })
-          }
-        } catch (error) {
-          console.error('Error deriving keys:', error)
-        }
+        // Generate ypriv/ypub (m/49'/0'/0' for P2SH-P2WPKH)
+        const segwitNode = masterNode.derivePath("m/49'/0'/0'")
+        setYpriv(segwitNode.toBase58())
+        setYpub(segwitNode.neutered().toBase58())
         
-        setDerivedKeys(derived)
+        // Generate zpriv/zpub (m/84'/0'/0' for P2WPKH)
+        const nativeSegwitNode = masterNode.derivePath("m/84'/0'/0'")
+        setZpriv(nativeSegwitNode.toBase58())
+        setZpub(nativeSegwitNode.neutered().toBase58())
+        
+        // Generate derived keys based on derivation path
+        generateDerivedKeys(derivationPath || "m/86'/0'/0'", masterNode)
+      } catch (error) {
+        console.error('Error generating keys from seed phrase:', error)
+        setMasterSeed('')
+        setXpriv('')
+        setXpub('')
+        setYpriv('')
+        setYpub('')
+        setZpriv('')
+        setZpub('')
+        setDerivedKeys([])
       }
-      
-      generateDerivedKeys(derivationPath || "m/86'/0'/0'")
     } else {
       setSeedValidation({ valid: false })
       setMasterSeed('')
@@ -160,7 +174,9 @@ export function SeedPage() {
   }
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(console.error)
+    }
   }
 
   return (
@@ -218,328 +234,372 @@ export function SeedPage() {
                 </Button>
               </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              BIP-39 mnemonic phrases use a standardized word list for generating seeds. Select word count and click shuffle to generate.
-            </div>
-          </div>
-
-          {/* Validation Status */}
-          <div className="space-y-2">
-            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Validation Status</Label>
-            <div className="flex items-center gap-2">
-              <Badge variant={seedValidation.valid ? "default" : seedPhrase ? "destructive" : "secondary"}>
-                {!seedPhrase ? 'No Input' : seedValidation.valid ? 'Valid BIP-39' : 'Invalid BIP-39'}
-              </Badge>
-              {seedValidation.error && (
-                <span className="text-sm text-destructive">{seedValidation.error}</span>
-              )}
-            </div>
-            {seedPhrase && !seedValidation.valid && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                <div className="text-sm text-amber-800 dark:text-amber-200">
-                  <p className="font-medium mb-1">⚠️ Wallet Compatibility Note</p>
-                  <p>
-                    Many wallets will accept invalid seed phrases but display a warning. 
-                    Seeds can still be generated and used, but may not be compatible across all wallet implementations.
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
 
           {seedPhrase && (
             <div className="space-y-4">
               <Separator />
-              
-              {/* Word Analysis */}
-              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Phrase Analysis</h4>
-                <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                  <div>Word count: {seedPhrase.trim().split(/\s+/).length}</div>
-                  <div>Language: English (BIP-39 standard)</div>
-                  <div>Entropy: {(seedPhrase.trim().split(/\s+/).length * 10.6667).toFixed(2)} bits (approximate)</div>
-                  <div>Checksum: {seedValidation.valid ? 'Valid' : 'Invalid or missing'}</div>
+              <div className="space-y-2">
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Validation Result</Label>
+                <div className="flex items-center gap-2">
+                  <Badge variant={seedValidation.valid ? "default" : "destructive"}>
+                    {seedValidation.valid ? 'Valid BIP-39' : 'Invalid BIP-39'}
+                  </Badge>
+                  {seedValidation.error && (
+                    <span className="text-sm text-destructive">{seedValidation.error}</span>
+                  )}
+                </div>
+              </div>
+
+              {!seedValidation.valid && (
+                <div className="p-3 bg-muted rounded text-sm">
+                  <strong>Wallet Compatibility:</strong> Note that the seed phrase does not have to be a valid BIP-39 seed phrase - any text can be used as input. Many wallets accept invalid seed phrases but will display a warning.
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Seed Analysis */}
+      {seedPhrase && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ArrowRight className="text-accent" />
+              Phrase Analysis
+            </CardTitle>
+            <CardDescription>
+              Detailed analysis of the entered seed phrase
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Word Count</Label>
+                <div className="text-sm font-mono">{seedPhrase.trim().split(/\s+/).length} words</div>
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Entropy</Label>
+                <div className="text-sm font-mono">
+                  {Math.round((seedPhrase.trim().split(/\s+/).length * Math.log2(2048)) * 100) / 100} bits
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Security Level</Label>
+                <div className="text-sm">
+                  {(() => {
+                    const words = seedPhrase.trim().split(/\s+/).length
+                    if (words >= 24) return "Very High"
+                    if (words >= 18) return "High"
+                    if (words >= 15) return "Medium"
+                    if (words >= 12) return "Standard"
+                    return "Low"
+                  })()}
                 </div>
               </div>
             </div>
-          )}
+          </CardContent>
+        </Card>
+      )}
 
-          {/* Master Seed and Keys */}
-          {seedPhrase && (seedValidation.valid || (!seedValidation.valid && seedPhrase.trim().split(/\s+/).length >= 12)) && (
+      {/* Master Seed and Keys */}
+      {masterSeed && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Key className="text-accent" />
+              Master Seed and Keys
+            </CardTitle>
+            <CardDescription>
+              Master seed and extended public/private key pairs derived from the mnemonic
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div className="space-y-4">
-              <Separator />
-              <div className="flex items-center gap-2">
-                <h4 className="font-semibold text-lg">Extended Master Keys</h4>
-                {!seedValidation.valid && (
-                  <Badge variant="outline" className="text-xs">
-                    Generated from invalid phrase
-                  </Badge>
-                )}
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Master Seed (512-bit)</Label>
-                  <div className="flex gap-2">
-                    <code className="flex-1 p-3 bg-muted rounded font-mono text-xs break-all">
-                      {masterSeed}
-                    </code>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => copyToClipboard(masterSeed)}
-                      title="Copy"
-                    >
-                      <Copy size={16} />
-                    </Button>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Generated from mnemonic using PBKDF2 with 2048 iterations
-                  </div>
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Master Seed (Hex)</Label>
+                <div className="flex gap-2">
+                  <code className="flex-1 p-3 bg-muted rounded font-mono text-xs break-all">{masterSeed}</code>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => copyToClipboard(masterSeed)}
+                    title="Copy"
+                  >
+                    <Copy size={16} />
+                  </Button>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="space-y-3">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Master Keys (xpriv/xpub)</Label>
-                    <div className="space-y-2">
+              <Separator />
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Extended Private Keys</h4>
+                  
+                  <div className="flex gap-4 items-start">
+                    <div className="flex-1">
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">xpriv (BIP44/Legacy)</Label>
                       <div className="flex gap-2">
-                        <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-xs break-all border border-accent/20">
-                          {xpriv}
-                        </code>
+                        <code className="flex-1 p-2 bg-muted rounded font-mono text-xs break-all">{xpriv}</code>
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => copyToClipboard(xpriv)}
-                          title="Copy xpriv"
-                        >
-                          <Copy size={16} />
-                        </Button>
-                      </div>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-xs break-all border border-accent/20">
-                          {xpub}
-                        </code>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => copyToClipboard(xpub)}
-                          title="Copy xpub"
+                          title="Copy"
                         >
                           <Copy size={16} />
                         </Button>
                       </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">Master Extended Keys</div>
-                    <div className="flex justify-center mt-2">
-                      <QRCodeDisplay 
-                        value={xpriv} 
-                        title="Master xpriv" 
-                        size={120}
-                      />
-                    </div>
+                    <QRCodeDisplay 
+                      value={xpriv} 
+                      title="xpriv" 
+                      size={100}
+                    />
                   </div>
 
-                  <div className="space-y-3">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Segwit (ypriv/ypub)</Label>
-                    <div className="space-y-2">
+                  <div className="flex gap-4 items-start">
+                    <div className="flex-1">
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">ypriv (BIP49/SegWit)</Label>
                       <div className="flex gap-2">
-                        <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-xs break-all border border-accent/20">
-                          {ypriv}
-                        </code>
+                        <code className="flex-1 p-2 bg-muted rounded font-mono text-xs break-all">{ypriv}</code>
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => copyToClipboard(ypriv)}
-                          title="Copy ypriv"
-                        >
-                          <Copy size={16} />
-                        </Button>
-                      </div>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-xs break-all border border-accent/20">
-                          {ypub}
-                        </code>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => copyToClipboard(ypub)}
-                          title="Copy ypub"
+                          title="Copy"
                         >
                           <Copy size={16} />
                         </Button>
                       </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">P2SH-P2WPKH (Segwit)</div>
-                    <div className="flex justify-center mt-2">
-                      <QRCodeDisplay 
-                        value={ypriv} 
-                        title="Segwit ypriv" 
-                        size={120}
-                      />
-                    </div>
+                    <QRCodeDisplay 
+                      value={ypriv} 
+                      title="ypriv" 
+                      size={100}
+                    />
                   </div>
 
-                  <div className="space-y-3">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Native Segwit (zpriv/zpub)</Label>
-                    <div className="space-y-2">
+                  <div className="flex gap-4 items-start">
+                    <div className="flex-1">
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">zpriv (BIP84/Native SegWit)</Label>
                       <div className="flex gap-2">
-                        <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-xs break-all border border-accent/20">
-                          {zpriv}
-                        </code>
+                        <code className="flex-1 p-2 bg-muted rounded font-mono text-xs break-all">{zpriv}</code>
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => copyToClipboard(zpriv)}
-                          title="Copy zpriv"
+                          title="Copy"
                         >
                           <Copy size={16} />
                         </Button>
                       </div>
+                    </div>
+                    <QRCodeDisplay 
+                      value={zpriv} 
+                      title="zpriv" 
+                      size={100}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Extended Public Keys</h4>
+                  
+                  <div className="flex gap-4 items-start">
+                    <div className="flex-1">
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">xpub (BIP44/Legacy)</Label>
                       <div className="flex gap-2">
-                        <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-xs break-all border border-accent/20">
-                          {zpub}
-                        </code>
+                        <code className="flex-1 p-2 bg-muted rounded font-mono text-xs break-all">{xpub}</code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(xpub)}
+                          title="Copy"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                    </div>
+                    <QRCodeDisplay 
+                      value={xpub} 
+                      title="xpub" 
+                      size={100}
+                    />
+                  </div>
+
+                  <div className="flex gap-4 items-start">
+                    <div className="flex-1">
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">ypub (BIP49/SegWit)</Label>
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-2 bg-muted rounded font-mono text-xs break-all">{ypub}</code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(ypub)}
+                          title="Copy"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                    </div>
+                    <QRCodeDisplay 
+                      value={ypub} 
+                      title="ypub" 
+                      size={100}
+                    />
+                  </div>
+
+                  <div className="flex gap-4 items-start">
+                    <div className="flex-1">
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">zpub (BIP84/Native SegWit)</Label>
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-2 bg-muted rounded font-mono text-xs break-all">{zpub}</code>
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => copyToClipboard(zpub)}
-                          title="Copy zpub"
+                          title="Copy"
                         >
                           <Copy size={16} />
                         </Button>
                       </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">P2WPKH (Native Segwit)</div>
-                    <div className="flex justify-center mt-2">
-                      <QRCodeDisplay 
-                        value={zpriv} 
-                        title="Native Segwit zpriv" 
-                        size={120}
-                      />
-                    </div>
+                    <QRCodeDisplay 
+                      value={zpub} 
+                      title="zpub" 
+                      size={100}
+                    />
                   </div>
                 </div>
               </div>
             </div>
-          )}
+          </CardContent>
+        </Card>
+      )}
 
-          {/* HD Key Derivation */}
-          {seedPhrase && (seedValidation.valid || (!seedValidation.valid && seedPhrase.trim().split(/\s+/).length >= 12)) && derivedKeys.length > 0 && (
+      {/* Hierarchical Deterministic Key Derivation */}
+      {masterSeed && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ArrowRight className="text-accent" />
+              Hierarchical Deterministic Key Derivation
+            </CardTitle>
+            <CardDescription>
+              Generate child keys using BIP-32 derivation paths. Enter a path up to the account level (m/purpose'/coin_type'/account').
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div className="space-y-4">
-              <Separator />
-              <h4 className="font-semibold text-lg">Hierarchical Deterministic Key Derivation</h4>
-              
-              <div className="space-y-2">
-                <Label htmlFor="derivation-path">Derivation Path</Label>
+              <div>
+                <Label htmlFor="derivation-path">Derivation Path (up to account level)</Label>
                 <Input
                   id="derivation-path"
                   value={derivationPath}
                   onChange={(e) => setDerivationPath(e.target.value)}
                   placeholder="m/86'/0'/0'"
-                  className="font-mono text-sm"
+                  className="font-mono"
                 />
-                <div className="text-xs text-muted-foreground">
-                  BIP-44 standard: m/purpose'/coin_type'/account' (change and address_index will be added automatically)
-                </div>
               </div>
 
-              {/* Derivation Path Summary */}
-              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Standard Derivation Paths</h4>
-                <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                  <div><strong>Legacy (P2PKH):</strong> m/44'/0'/0' - Traditional Bitcoin addresses starting with "1"</div>
-                  <div><strong>Segwit (P2SH):</strong> m/49'/0'/0' - Segwit wrapped in P2SH addresses starting with "3"</div>
-                  <div><strong>Native Segwit (P2WPKH):</strong> m/84'/0'/0' - Bech32 addresses starting with "bc1q"</div>
-                  <div><strong>Taproot (P2TR):</strong> m/86'/0'/0' - Taproot addresses starting with "bc1p"</div>
+              <div className="p-4 bg-muted rounded space-y-2">
+                <h4 className="font-semibold text-sm">Common Derivation Paths:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                  <div><code>m/44'/0'/0'</code> - Legacy (P2PKH)</div>
+                  <div><code>m/49'/0'/0'</code> - SegWit (P2SH-P2WPKH)</div>
+                  <div><code>m/84'/0'/0'</code> - Native SegWit (P2WPKH)</div>
+                  <div><code>m/86'/0'/0'</code> - Taproot (P2TR)</div>
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-3">
-                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Derived Keys (First 5 addresses)</Label>
-                
-                {derivedKeys.map((key, index) => (
-                  <div key={index} className="p-4 bg-muted rounded-lg">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Key size={16} className="text-accent" />
-                      <code className="text-sm font-medium">{key.path}</code>
-                    </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">Private Key</Label>
-                        <div className="flex gap-2">
-                          <code className="flex-1 p-2 bg-background rounded font-mono text-xs break-all">
-                            {key.privateKey}
-                          </code>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(key.privateKey)}
-                            title="Copy"
-                          >
-                            <Copy size={12} />
-                          </Button>
-                        </div>
-                        <div className="flex justify-center mt-2">
-                          <QRCodeDisplay 
-                            value={key.privateKey} 
-                            title={`Private Key ${index + 1}`} 
-                            size={100}
-                          />
-                        </div>
+            {derivedKeys.length > 0 && (
+              <div className="space-y-4">
+                <Separator />
+                <h4 className="font-semibold">Derived Keys (First 5 addresses, change branch 0)</h4>
+                <div className="space-y-3">
+                  {derivedKeys.map((key, index) => (
+                    <div key={index} className="p-4 border rounded space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Path: {key.path}
+                        </Label>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">Address</Label>
-                        <div className="flex gap-2">
-                          <code className="flex-1 p-2 bg-background rounded font-mono text-xs">
-                            {key.address}
-                          </code>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(key.address)}
-                            title="Copy"
-                          >
-                            <Copy size={12} />
-                          </Button>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Private Key</Label>
+                          <div className="flex gap-2">
+                            <code className="flex-1 p-2 bg-muted rounded font-mono text-xs break-all">
+                              {key.privateKey}
+                            </code>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => copyToClipboard(key.privateKey)}
+                              title="Copy"
+                            >
+                              <Copy size={16} />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex justify-center mt-2">
-                          <QRCodeDisplay 
-                            value={key.address} 
-                            title={`Address ${index + 1}`} 
-                            size={100}
-                          />
+                        <div>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Address</Label>
+                          <div className="flex gap-2">
+                            <code className="flex-1 p-2 bg-muted rounded font-mono text-xs break-all">
+                              {key.address}
+                            </code>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => copyToClipboard(key.address)}
+                              title="Copy"
+                            >
+                              <Copy size={16} />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-          {/* Information Box */}
-          <div className="p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
-            <h4 className="font-semibold text-amber-900 dark:text-amber-100 mb-2">About BIP-39 and HD Wallets</h4>
-            <div className="text-sm text-amber-800 dark:text-amber-200 space-y-2">
-              <p>
-                <strong>BIP-39</strong> defines how mnemonic phrases are generated and converted to binary seeds. 
-                The seed is created from the seed phrase text using PBKDF2 with 2048 iterations and an optional passphrase.
-              </p>
-              <p>
-                <strong>Wallet Compatibility:</strong> Note that the seed phrase does not have to be a valid BIP-39 seed phrase - any text can be used as input.
-                Many wallets accept invalid seed phrases but will display a warning. 
-                While seeds can be generated from any input, using non-standard phrases may result in compatibility 
-                issues between different wallet implementations.
-              </p>
-              <p>
-                <strong>BIP-32</strong> defines hierarchical deterministic (HD) wallet structure, allowing generation 
-                of a tree of key pairs from a single master seed.
-              </p>
-              <p>
-                <strong>BIP-44</strong> defines the standard derivation path structure: 
-                m/purpose'/coin_type'/account'/change/address_index, where Bitcoin uses coin_type = 0.
-              </p>
-            </div>
+      {/* About Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>About BIP-39 and HD Wallets</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <h4 className="font-semibold">BIP-39 (Mnemonic Seeds)</h4>
+            <p className="text-sm text-muted-foreground">
+              BIP-39 defines how to generate mnemonic sentences (seed phrases) that can be used to derive cryptographic keys. 
+              The seed is created from the seed phrase text and is used as the root for hierarchical deterministic wallets.
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <h4 className="font-semibold">BIP-32 (Hierarchical Deterministic Wallets)</h4>
+            <p className="text-sm text-muted-foreground">
+              BIP-32 enables the generation of multiple keys from a single seed. This allows users to generate many addresses 
+              from one backup, improving privacy and usability. Keys are derived using mathematical functions, 
+              ensuring deterministic and reproducible wallet generation.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="font-semibold">Derivation Paths</h4>
+            <p className="text-sm text-muted-foreground">
+              Different Bitcoin address types use different derivation paths. Legacy addresses use BIP-44 (m/44'), 
+              SegWit addresses use BIP-49 (m/49'), Native SegWit uses BIP-84 (m/84'), and Taproot uses BIP-86 (m/86').
+            </p>
           </div>
         </CardContent>
       </Card>

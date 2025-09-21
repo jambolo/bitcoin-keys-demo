@@ -6,7 +6,13 @@ import { ECPairFactory } from 'ecpair'
 import * as tinysecp256k1 from 'tiny-secp256k1'
 
 // Initialize ECPair with tiny-secp256k1
-const ECPair = ECPairFactory(tinysecp256k1)
+let ECPair: any
+try {
+  ECPair = ECPairFactory(tinysecp256k1)
+} catch (error) {
+  console.error('Failed to initialize ECPair:', error)
+  throw error
+}
 
 export interface BitcoinKeyData {
   privateKeyWif?: string
@@ -26,14 +32,19 @@ export function generateRandomPrivateKey(): string {
 }
 
 export function isValidHex(hex: string, expectedLength?: number): boolean {
+  if (!hex || typeof hex !== 'string') return false
   if (!/^[0-9a-fA-F]*$/.test(hex)) return false
   if (expectedLength && hex.length !== expectedLength) return false
   return true
 }
 
 export function privateKeyFromWif(wif: string): BitcoinKeyData | null {
+  if (!wif || typeof wif !== 'string') return null
+  
   try {
     const keyPair = ECPair.fromWIF(wif)
+    if (!keyPair.publicKey) return null
+    
     const compressed = keyPair.compressed
     const privateKeyHex = keyPair.privateKey ? Buffer.from(keyPair.privateKey).toString('hex') : undefined
     const publicKeyHex = Buffer.from(keyPair.publicKey).toString('hex')
@@ -71,6 +82,8 @@ export function privateKeyFromWif(wif: string): BitcoinKeyData | null {
 }
 
 export function privateKeyFromHex(hex: string): BitcoinKeyData | null {
+  if (!hex || typeof hex !== 'string') return null
+  
   try {
     if (!isValidHex(hex, 64)) return null
     const keyPair = ECPair.fromPrivateKey(Buffer.from(hex, 'hex'))
@@ -81,6 +94,8 @@ export function privateKeyFromHex(hex: string): BitcoinKeyData | null {
 }
 
 export function encodeWif(privateKeyHex: string, compressed: boolean = true): string | null {
+  if (!privateKeyHex || typeof privateKeyHex !== 'string') return null
+  
   try {
     if (!isValidHex(privateKeyHex, 64)) return null
     
@@ -95,6 +110,8 @@ export function encodeWif(privateKeyHex: string, compressed: boolean = true): st
 }
 
 export function decodeWif(wif: string): { privateKeyHex: string; compressed: boolean; checksum: string; valid: boolean } | null {
+  if (!wif || typeof wif !== 'string') return null
+  
   try {
     // First validate using ECPair
     const keyPair = ECPair.fromWIF(wif)
@@ -103,8 +120,12 @@ export function decodeWif(wif: string): { privateKeyHex: string; compressed: boo
     const decoded = bs58.decode(wif)
     const checksum = Buffer.from(decoded.subarray(-4)).toString('hex')
     
+    if (!keyPair.privateKey) {
+      return null
+    }
+    
     return {
-      privateKeyHex: Buffer.from(keyPair.privateKey!).toString('hex'),
+      privateKeyHex: Buffer.from(keyPair.privateKey).toString('hex'),
       compressed: keyPair.compressed,
       checksum,
       valid: true
@@ -115,6 +136,10 @@ export function decodeWif(wif: string): { privateKeyHex: string; compressed: boo
 }
 
 export function validateWif(wif: string): { valid: boolean; error?: string } {
+  if (!wif || typeof wif !== 'string') {
+    return { valid: false, error: 'Invalid input' }
+  }
+  
   try {
     // Check for valid Base58 characters
     const base58Regex = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/

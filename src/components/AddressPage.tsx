@@ -136,7 +136,9 @@ export function AddressPage() {
   }
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(console.error)
+    }
   }
 
   const clearInputs = () => {

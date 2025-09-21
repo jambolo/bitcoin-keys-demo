@@ -67,7 +67,7 @@ export function PrivateKeyPage() {
       setValidationInput('')
       // Don't clear shared state here to preserve cross-page functionality
     }
-  }, [privateKeyHex, setSharedCompressedWif])
+  }, [privateKeyHex])
 
   // Handle WIF input
   useEffect(() => {
@@ -98,7 +98,9 @@ export function PrivateKeyPage() {
   }
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(console.error)
+    }
   }
 
   return (

@@ -45,7 +45,7 @@ export function PublicKeyPage() {
     } else {
       setDerivedData(null)
     }
-  }, [wifInput, setPublicKeyInput])
+  }, [wifInput])
 
   // Update validation input when derived data changes
   useEffect(() => {
@@ -70,7 +70,9 @@ export function PublicKeyPage() {
   }
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(console.error)
+    }
   }
 
   return (
