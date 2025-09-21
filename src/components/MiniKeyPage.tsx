@@ -14,7 +14,7 @@ import {
   privateKeyFromHex,
   encodeWif,
   BitcoinKeyData
-} from '@/lib/bitcoin'
+} from '@/lib/bitcoin-lite'
 import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 export function MiniKeyPage() {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BitcoinErrorBoundary } from '@/components/BitcoinErrorBoundary'
@@ -12,6 +12,7 @@ import { Key, Shield, MapPin, Coins, Plant } from '@phosphor-icons/react'
 function App() {
   const [activeTab, setActiveTab] = useState('private-key')
 
+  // No initialization needed for bitcoin-lite
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4">

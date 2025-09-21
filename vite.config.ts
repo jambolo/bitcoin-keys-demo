@@ -32,9 +32,10 @@ export default defineConfig({
   define: {
     global: 'globalThis',
     'process.env': {},
+    'require': 'undefined'
   },
   optimizeDeps: {
-    include: ['bitcoinjs-lib', 'bip39', 'bs58', 'ecpair', 'bip32', 'tiny-secp256k1', 'buffer', 'process', 'util'],
+    include: ['bitcoinjs-lib', 'bip39', 'bs58', 'ecpair', 'bip32', 'tiny-secp256k1', 'buffer', 'process/browser', 'util'],
     exclude: []
   }
 });

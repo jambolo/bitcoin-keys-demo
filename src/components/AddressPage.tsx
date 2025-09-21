@@ -15,7 +15,7 @@ import {
   decodeAddress,
   BitcoinKeyData,
   isValidHex
-} from '@/lib/bitcoin'
+} from '@/lib/bitcoin-lite'
 import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 export function AddressPage() {

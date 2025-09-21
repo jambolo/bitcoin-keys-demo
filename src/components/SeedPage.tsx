@@ -15,7 +15,7 @@ import * as ecc from 'tiny-secp256k1'
 import { Buffer } from '@/lib/polyfills'
 import { 
   privateKeyFromHex as importedPrivateKeyFromHex
-} from '@/lib/bitcoin'
+} from '@/lib/bitcoin-lite'
 import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 const bip32 = BIP32Factory(ecc)
@@ -26,6 +26,7 @@ export function SeedPage() {
   const [derivationPath, setDerivationPath] = useKV('seed-derivation-path', "m/86'/0'/0'")
   const [selectedWordCount, setSelectedWordCount] = useKV('seed-word-count', '12')
   
+  const [isInitialized, setIsInitialized] = useState(false)
   const [seedValidation, setSeedValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
   const [masterSeed, setMasterSeed] = useState('')
   const [xpriv, setXpriv] = useState('')
@@ -39,6 +40,11 @@ export function SeedPage() {
     privateKey: string
     address: string
   }>>([])
+
+  // Initialize Bitcoin library
+  useEffect(() => {
+    setIsInitialized(true) // Bitcoin-lite doesn't need initialization
+  }, [])
 
   // Generate derived keys function
   const generateDerivedKeys = (basePath: string, masterNode: any) => {
@@ -189,8 +195,16 @@ export function SeedPage() {
         </p>
       </div>
 
-      {/* Seed Generation and Validation */}
-      <Card>
+      {!isInitialized ? (
+        <Card>
+          <CardContent className="flex items-center justify-center py-8">
+            <p className="text-muted-foreground">Initializing Bitcoin cryptography...</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Seed Generation and Validation */}
+          <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ArrowRight className="text-accent" />
@@ -604,6 +618,8 @@ export function SeedPage() {
           </div>
         </CardContent>
       </Card>
+        </>
+      )}
     </div>
   )
 }

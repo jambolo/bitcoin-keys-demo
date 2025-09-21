@@ -15,6 +15,7 @@ import "./index.css"
 // Ensure Buffer is available before starting the app
 if (typeof window !== 'undefined') {
   console.log('Buffer availability check:', !!(window as any).Buffer)
+  console.log('Process availability check:', !!(window as any).process)
 }
 
 createRoot(document.getElementById('root')!).render(

@@ -11,9 +11,9 @@
     <link href="/src/main.css" rel="stylesheet" />
     <script>
         // Buffer polyfill setup to prevent externalization errors
-        if (typeof window !== 'undefined' && !window.Buffer) {
+        if (typeof window !== 'undefined') {
             window.global = window;
-            window.process = { env: {} };
+            window.process = window.process || { env: {} };
         }
     </script>
 </head>

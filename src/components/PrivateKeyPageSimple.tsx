@@ -8,13 +8,12 @@ import { QRCode } from '@/components/QRCode'
 import { Copy } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { 
-  initializeBitcoinLib, 
   generateRandomPrivateKey, 
   generateWifSteps,
   decodeWif,
   validateWif,
   isValidHex
-} from '@/lib/bitcoin-simple'
+} from '@/lib/bitcoin-lite'
 import { useKV } from '@github/spark/hooks'
 
 export function PrivateKeyPage() {
@@ -30,15 +29,11 @@ export function PrivateKeyPage() {
   useEffect(() => {
     const initLib = async () => {
       try {
-        console.log('Attempting to initialize Bitcoin library...')
-        const success = await initializeBitcoinLib()
-        setIsLibReady(success)
-        if (!success) {
-          setInitError('Bitcoin library failed to initialize')
-        }
+        console.log('Bitcoin library ready (no initialization needed)')
+        setIsLibReady(true)
       } catch (error: any) {
-        console.error('Bitcoin library initialization error:', error)
-        setInitError(error.message || 'Unknown error during library initialization')
+        console.error('Bitcoin library error:', error)
+        setInitError(error.message || 'Unknown error')
       } finally {
         setIsLoading(false)
       }
