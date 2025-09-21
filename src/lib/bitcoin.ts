@@ -298,12 +298,13 @@ export function miniKeyToPrivateKey(miniKey: string): string | null {
   const validation = validateMiniKey(miniKey)
   if (!validation.valid) return null
   
-  // For demo, return a fixed private key for the known mini key
-  if (miniKey === 'S6c56bnXQiBjk9mqSYE7ykVQ7NzrRy') {
-    return '4f3c3c9c8b2eb8b3e3e3b3b9c3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3'
+  try {
+    // Generate private key by applying SHA256 to the mini key
+    const hash = bitcoin.crypto.sha256(Buffer.from(miniKey, 'utf8'))
+    return Buffer.from(hash).toString('hex')
+  } catch (error) {
+    return null
   }
-  
-  return null
 }
 
 export function generateWifSteps(privateKeyHex: string, compressed: boolean): {
