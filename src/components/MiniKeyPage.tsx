@@ -146,7 +146,7 @@ export function MiniKeyPage() {
             Mini Key Private Key Derivation
           </CardTitle>
           <CardDescription>
-            Enter or use the generated mini key above to derive the private key and full key chain
+            Enter or use the generated mini key above to derive the private key
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -215,7 +215,7 @@ export function MiniKeyPage() {
                 </div>
               </div>
 
-              {/* Derived Private Key Chain */}
+              {/* Derived Private Key */}
               {derivedData && validation.valid && (
                 <div className="space-y-4">
                   <Separator />
@@ -280,77 +280,6 @@ export function MiniKeyPage() {
                         </Button>
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">32-byte private key derived from mini key</div>
-                    </div>
-
-                    <div className="text-center text-muted-foreground">
-                      <ArrowRight className="mx-auto" size={20} />
-                      <div className="text-xs mt-1">ECDSA Point Multiplication</div>
-                    </div>
-
-                    <div>
-                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Public Key (Hex)</Label>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-3 bg-muted rounded font-mono text-sm break-all">
-                          {derivedData.publicKeyHex}
-                        </code>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => copyToClipboard(derivedData.publicKeyHex || '')}
-                          title="Copy"
-                        >
-                          <Copy size={16} />
-                        </Button>
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {derivedData.compressed ? 'Compressed public key (33 bytes)' : 'Uncompressed public key (65 bytes)'}
-                      </div>
-                    </div>
-
-                    <div className="text-center text-muted-foreground">
-                      <ArrowRight className="mx-auto" size={20} />
-                      <div className="text-xs mt-1">RIPEMD160(SHA256(public_key))</div>
-                    </div>
-
-                    <div>
-                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Public Key Hash (Hex)</Label>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-3 bg-muted rounded font-mono text-sm break-all">
-                          {derivedData.publicKeyHash}
-                        </code>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => copyToClipboard(derivedData.publicKeyHash || '')}
-                          title="Copy"
-                        >
-                          <Copy size={16} />
-                        </Button>
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">20-byte hash used in address generation</div>
-                    </div>
-
-                    <div className="text-center text-muted-foreground">
-                      <ArrowRight className="mx-auto" size={20} />
-                      <div className="text-xs mt-1">Base58Check Encoding</div>
-                    </div>
-
-                    <div>
-                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Bitcoin Address (P2PKH)</Label>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                          {derivedData.p2pkhAddress}
-                        </code>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => copyToClipboard(derivedData.p2pkhAddress || '')}
-                          title="Copy"
-                        >
-                          <Copy size={16} />
-                        </Button>
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">Pay-to-Public-Key-Hash address</div>
                     </div>
                   </div>
                 </div>
