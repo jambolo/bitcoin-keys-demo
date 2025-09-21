@@ -25,12 +25,12 @@ export function PublicKeyPage() {
   // Get shared compressed WIF from Private Key page
   const [sharedCompressedWif] = useKV('shared-compressed-wif', '')
   
-  // Initialize WIF input with shared compressed WIF on first load
+  // Initialize WIF input with shared compressed WIF
   useEffect(() => {
-    if (sharedCompressedWif && !wifInput) {
+    if (sharedCompressedWif) {
       setWifInput(sharedCompressedWif)
     }
-  }, [sharedCompressedWif, wifInput])
+  }, [sharedCompressedWif, setWifInput])
 
   // Handle WIF input for derivation
   useEffect(() => {
@@ -39,24 +39,18 @@ export function PublicKeyPage() {
         const data = await privateKeyFromWif(wifInput)
         setDerivedData(data)
         
-        // Auto-populate validation input with derived public key
-        if (data?.publicKeyHex && !publicKeyInput) {
+        // Always update validation input with newly derived public key
+        if (data?.publicKeyHex) {
           setPublicKeyInput(data.publicKeyHex)
         }
       } else {
         setDerivedData(null)
+        setPublicKeyInput('')
       }
     }
     
     processWif()
-  }, [wifInput, publicKeyInput])
-
-  // Update validation input when derived data changes
-  useEffect(() => {
-    if (derivedData?.publicKeyHex && !publicKeyInput) {
-      setPublicKeyInput(derivedData.publicKeyHex)
-    }
-  }, [derivedData, publicKeyInput, setPublicKeyInput])
+  }, [wifInput, setPublicKeyInput])
 
   // Handle public key validation
   useEffect(() => {
@@ -119,6 +113,11 @@ export function PublicKeyPage() {
                 <Shuffle size={16} />
               </Button>
             </div>
+            {sharedCompressedWif && wifInput === sharedCompressedWif && (
+              <div className="text-xs text-accent">
+                Using compressed WIF from Private Key page
+              </div>
+            )}
           </div>
 
           {derivedData && (
@@ -176,6 +175,8 @@ export function PublicKeyPage() {
                       ? `Starts with ${derivedData.publicKeyHex?.slice(0, 2)} (compressed prefix)`
                       : 'Starts with 04 (uncompressed prefix)'
                     }
+                    <br />
+                    <span className="text-accent">Auto-populated in validation section below</span>
                   </div>
                 </div>
               </div>
@@ -214,6 +215,11 @@ export function PublicKeyPage() {
               placeholder="Enter public key in hexadecimal format"
               className="font-mono text-sm"
             />
+            {derivedData?.publicKeyHex && publicKeyInput === derivedData.publicKeyHex && (
+              <div className="text-xs text-accent">
+                Auto-populated from derivation section above
+              </div>
+            )}
           </div>
 
           {publicKeyInput && (
