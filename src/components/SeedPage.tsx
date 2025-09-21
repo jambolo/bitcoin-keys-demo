@@ -45,56 +45,53 @@ export function SeedPage() {
       const isValid = bip39.validateMnemonic(seedPhrase)
       if (isValid) {
         setSeedValidation({ valid: true })
+      } else {
+        setSeedValidation({ valid: false, error: 'Invalid BIP-39 mnemonic phrase (checksum failure)' })
+      }
+      
+      // Generate master seed and keys regardless of BIP-39 validity
+      // Many wallets accept invalid seed phrases but show warnings
+      const seed = bip39.mnemonicToSeedSync(seedPhrase)
+      const seedBuffer = Buffer.from(seed)
+      setMasterSeed(seedBuffer.toString('hex'))
+      
+      // Simplified master key generation for demo
+      const masterPriv = seedBuffer.subarray(0, 32).toString('hex')
+      setMasterPrivateKey(masterPriv)
+      setMasterPublicKey('04' + seedBuffer.subarray(32, 65).toString('hex'))
+      
+      // Generate some derived keys for demo
+      const generateDerivedKeys = async () => {
+        const { privateKeyFromHex } = await import('@/lib/bitcoin')
         
-        // Generate master seed and keys
-        const seed = bip39.mnemonicToSeedSync(seedPhrase)
-        const seedBuffer = Buffer.from(seed)
-        setMasterSeed(seedBuffer.toString('hex'))
+        const derived: Array<{
+          path: string
+          privateKey: string
+          address: string
+        }> = []
         
-        // Simplified master key generation for demo
-        const masterPriv = seedBuffer.subarray(0, 32).toString('hex')
-        setMasterPrivateKey(masterPriv)
-        setMasterPublicKey('04' + seedBuffer.subarray(32, 65).toString('hex'))
-        
-        // Generate some derived keys for demo
-        const generateDerivedKeys = async () => {
-          const { privateKeyFromHex } = await import('@/lib/bitcoin')
-          
-          const derived: Array<{
-            path: string
-            privateKey: string
-            address: string
-          }> = []
-          
-          for (let i = 0; i < 5; i++) {
-            // Create a derived private key by mixing the seed with the index
-            const derivedBytes = new Uint8Array(32)
-            for (let j = 0; j < 32; j++) {
-              derivedBytes[j] = seedBuffer[(i * 32 + j) % seedBuffer.length] ^ (i + j)
-            }
-            const derivedPrivateKey = Buffer.from(derivedBytes).toString('hex')
-            
-            // Generate real Bitcoin address
-            const keyData = privateKeyFromHex(derivedPrivateKey)
-            
-            derived.push({
-              path: `m/44'/0'/0'/0/${i}`,
-              privateKey: derivedPrivateKey,
-              address: keyData?.p2pkhAddress || 'Error generating address'
-            })
+        for (let i = 0; i < 5; i++) {
+          // Create a derived private key by mixing the seed with the index
+          const derivedBytes = new Uint8Array(32)
+          for (let j = 0; j < 32; j++) {
+            derivedBytes[j] = seedBuffer[(i * 32 + j) % seedBuffer.length] ^ (i + j)
           }
+          const derivedPrivateKey = Buffer.from(derivedBytes).toString('hex')
           
-          setDerivedKeys(derived)
+          // Generate real Bitcoin address
+          const keyData = privateKeyFromHex(derivedPrivateKey)
+          
+          derived.push({
+            path: `m/44'/0'/0'/0/${i}`,
+            privateKey: derivedPrivateKey,
+            address: keyData?.p2pkhAddress || 'Error generating address'
+          })
         }
         
-        generateDerivedKeys()
-      } else {
-        setSeedValidation({ valid: false, error: 'Invalid BIP-39 mnemonic phrase' })
-        setMasterSeed('')
-        setMasterPrivateKey('')
-        setMasterPublicKey('')
-        setDerivedKeys([])
+        setDerivedKeys(derived)
       }
+      
+      generateDerivedKeys()
     } else {
       setSeedValidation({ valid: false })
       setMasterSeed('')
@@ -180,12 +177,23 @@ export function SeedPage() {
             <Label className="text-xs uppercase tracking-wide text-muted-foreground">Validation Status</Label>
             <div className="flex items-center gap-2">
               <Badge variant={seedValidation.valid ? "default" : seedPhrase ? "destructive" : "secondary"}>
-                {!seedPhrase ? 'No Input' : seedValidation.valid ? 'Valid BIP-39' : 'Invalid'}
+                {!seedPhrase ? 'No Input' : seedValidation.valid ? 'Valid BIP-39' : 'Invalid BIP-39'}
               </Badge>
               {seedValidation.error && (
                 <span className="text-sm text-destructive">{seedValidation.error}</span>
               )}
             </div>
+            {seedPhrase && !seedValidation.valid && (
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                <div className="text-sm text-amber-800 dark:text-amber-200">
+                  <p className="font-medium mb-1">⚠️ Wallet Compatibility Note</p>
+                  <p>
+                    Many wallets will accept invalid seed phrases but display a warning. 
+                    Seeds can still be generated and used, but may not be compatible across all wallet implementations.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {seedPhrase && (
@@ -206,10 +214,17 @@ export function SeedPage() {
           )}
 
           {/* Master Seed and Keys */}
-          {seedValidation.valid && (
+          {seedPhrase && (seedValidation.valid || (!seedValidation.valid && seedPhrase.trim().split(/\s+/).length >= 12)) && (
             <div className="space-y-4">
               <Separator />
-              <h4 className="font-semibold text-lg">Master Seed and Keys</h4>
+              <div className="flex items-center gap-2">
+                <h4 className="font-semibold text-lg">Master Seed and Keys</h4>
+                {!seedValidation.valid && (
+                  <Badge variant="outline" className="text-xs">
+                    Generated from invalid phrase
+                  </Badge>
+                )}
+              </div>
               
               <div className="space-y-4">
                 <div>
@@ -274,7 +289,7 @@ export function SeedPage() {
           )}
 
           {/* HD Key Derivation */}
-          {seedValidation.valid && derivedKeys.length > 0 && (
+          {seedPhrase && (seedValidation.valid || (!seedValidation.valid && seedPhrase.trim().split(/\s+/).length >= 12)) && derivedKeys.length > 0 && (
             <div className="space-y-4">
               <Separator />
               <h4 className="font-semibold text-lg">Hierarchical Deterministic Key Derivation</h4>
@@ -350,6 +365,11 @@ export function SeedPage() {
                 <strong>BIP-39</strong> defines how mnemonic phrases are generated and converted to binary seeds. 
                 The seed is created from the seed phrase text using PBKDF2 with 2048 iterations and an optional passphrase.
                 Note that the seed phrase does not have to be a valid BIP-39 seed phrase - any text can be used as input.
+              </p>
+              <p>
+                <strong>Wallet Compatibility:</strong> Many wallets accept invalid seed phrases but will display a warning. 
+                While seeds can be generated from any input, using non-standard phrases may result in compatibility 
+                issues between different wallet implementations.
               </p>
               <p>
                 <strong>BIP-32</strong> defines hierarchical deterministic (HD) wallet structure, allowing generation 
