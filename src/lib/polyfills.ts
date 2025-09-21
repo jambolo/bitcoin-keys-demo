@@ -1,6 +1,6 @@
 // Browser polyfills for Node.js modules
 import { Buffer as BufferPoly } from 'buffer'
-import ProcessPoly from 'process/browser'
+import ProcessPoly from 'process'
 
 // Ensure global Buffer and process are available before anything else
 if (typeof globalThis !== 'undefined') {
