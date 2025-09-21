@@ -241,14 +241,21 @@ export function generateWifSteps(privateKeyHex: string, compressed: boolean): {
   try {
     if (!isValidHex(privateKeyHex, 64)) return null
     
-    // Step 1: Add prefix
+    // Step 1: Add prefix and compression flag if needed
     const prefix = '80'
     const step1 = prefix + privateKeyHex + (compressed ? '01' : '')
     
-    // Create simplified steps for demo
-    const step2 = 'sha256(' + step1 + ')'
-    const step3 = 'checksum_first_4_bytes'
-    const step4 = step1 + 'checksum'
+    // Step 2: Create double SHA256 hash
+    const step1Buffer = Buffer.from(step1, 'hex')
+    const hash1 = bitcoin.crypto.sha256(step1Buffer)
+    const hash2 = bitcoin.crypto.sha256(hash1)
+    const step2 = Buffer.from(hash2).toString('hex')
+    
+    // Step 3: Get first 4 bytes as checksum
+    const step3 = step2.substring(0, 8) // First 4 bytes = 8 hex characters
+    
+    // Step 4: Concatenate original data with checksum
+    const step4 = step1 + step3
     
     // Get actual WIF
     const wif = encodeWif(privateKeyHex, compressed) || ''

@@ -149,7 +149,7 @@ export function PrivateKeyPage() {
                         </code>
                       </div>
                       <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 2: SHA256 Hash</Label>
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 2: Double SHA256 Hash</Label>
                         <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
                           {compressedSteps.step2}
                         </code>
@@ -202,7 +202,7 @@ export function PrivateKeyPage() {
                         </code>
                       </div>
                       <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 2: SHA256 Hash</Label>
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Step 2: Double SHA256 Hash</Label>
                         <code className="block p-2 bg-muted rounded font-mono text-xs break-all">
                           {uncompressedSteps.step2}
                         </code>
