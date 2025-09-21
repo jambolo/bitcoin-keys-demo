@@ -180,7 +180,6 @@ export function validatePublicKey(pubkeyHex: string): { valid: boolean; error?: 
 
 export function validateBitcoinAddress(address: string): { valid: boolean; error?: string } {
   try {
-    // Try legacy address validation
     bitcoin.address.toOutputScript(address)
     return { valid: true }
   } catch {
@@ -188,16 +187,50 @@ export function validateBitcoinAddress(address: string): { valid: boolean; error
   }
 }
 
-export function decodeAddress(address: string): { type: string; hash: string; checksum: string } | null {
+export function decodeAddress(address: string): { 
+  type: string; 
+  hash: string; 
+  checksum?: string;
+  witnessVersion?: number;
+} | null {
   try {
+    // Check if it's a bech32 address (starts with bc1)
+    if (address.startsWith('bc1')) {
+      try {
+        const decoded = bitcoin.address.fromBech32(address)
+        
+        let type = 'Unknown SegWit'
+        if (decoded.version === 0) {
+          if (decoded.data.length === 20) {
+            type = 'P2WPKH (Native SegWit v0)'
+          } else if (decoded.data.length === 32) {
+            type = 'P2WSH (Native SegWit v0)'
+          }
+        } else if (decoded.version === 1 && decoded.data.length === 32) {
+          type = 'P2TR (Taproot)'
+        } else {
+          type = `SegWit v${decoded.version}`
+        }
+        
+        return {
+          type,
+          hash: Buffer.from(decoded.data).toString('hex'),
+          witnessVersion: decoded.version
+        }
+      } catch {
+        return null
+      }
+    }
+    
+    // Legacy address decoding (Base58)
     const decoded = bs58.decode(address)
     const version = decoded[0]
     const hash = Buffer.from(decoded.subarray(1, -4)).toString('hex')
     const checksum = Buffer.from(decoded.subarray(-4)).toString('hex')
     
     let type = 'Unknown'
-    if (version === 0x00) type = 'P2PKH'
-    else if (version === 0x05) type = 'P2SH'
+    if (version === 0x00) type = 'P2PKH (Legacy)'
+    else if (version === 0x05) type = 'P2SH (Script Hash)'
     
     return { type, hash, checksum }
   } catch {

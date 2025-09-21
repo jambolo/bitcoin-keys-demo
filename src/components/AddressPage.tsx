@@ -378,7 +378,7 @@ export function AddressPage() {
             Address Decoding
           </CardTitle>
           <CardDescription>
-            Decode a Bitcoin address to see its components
+            Decode Bitcoin addresses (Legacy, SegWit, and Taproot) to see their components
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -388,31 +388,116 @@ export function AddressPage() {
               id="address-decode"
               value={addressInput}
               onChange={(e) => setAddressInput(e.target.value)}
-              placeholder="Enter Bitcoin address to decode"
+              placeholder="Enter Bitcoin address (1..., 3..., bc1q..., bc1p...)"
               className="font-mono text-sm"
             />
+          </div>
+
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block">Example Addresses</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-muted-foreground">Legacy P2PKH:</span>
+                <button 
+                  className="block font-mono text-blue-600 hover:text-blue-800 break-all"
+                  onClick={() => setAddressInput('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')}
+                >
+                  1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
+                </button>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Legacy P2SH:</span>
+                <button 
+                  className="block font-mono text-blue-600 hover:text-blue-800 break-all"
+                  onClick={() => setAddressInput('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')}
+                >
+                  3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy
+                </button>
+              </div>
+              <div>
+                <span className="text-muted-foreground">SegWit v0:</span>
+                <button 
+                  className="block font-mono text-blue-600 hover:text-blue-800 break-all"
+                  onClick={() => setAddressInput('bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4')}
+                >
+                  bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
+                </button>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Taproot:</span>
+                <button 
+                  className="block font-mono text-blue-600 hover:text-blue-800 break-all"
+                  onClick={() => setAddressInput('bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8ztwac72sfr9rusxg3297')}
+                >
+                  bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8ztwac72sfr9rusxg3297
+                </button>
+              </div>
+            </div>
           </div>
 
           {decodedAddress && (
             <div className="space-y-4">
               <Separator />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-4">
                 <div>
                   <Label className="text-xs uppercase tracking-wide text-muted-foreground">Address Type</Label>
-                  <Badge>{decodedAddress.type}</Badge>
+                  <Badge className="text-sm">{decodedAddress.type}</Badge>
                 </div>
-                <div>
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Public Key Hash</Label>
-                  <code className="block p-2 bg-muted rounded font-mono text-sm break-all">
-                    {decodedAddress.hash}
-                  </code>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                      {decodedAddress.witnessVersion !== undefined ? 'Witness Program' : 'Public Key Hash'}
+                    </Label>
+                    <code className="block p-2 bg-muted rounded font-mono text-sm break-all">
+                      {decodedAddress.hash}
+                    </code>
+                  </div>
+                  
+                  {decodedAddress.checksum && (
+                    <div>
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Checksum</Label>
+                      <code className="block p-2 bg-muted rounded font-mono text-sm break-all">
+                        {decodedAddress.checksum}
+                      </code>
+                    </div>
+                  )}
+                  
+                  {decodedAddress.witnessVersion !== undefined && (
+                    <div>
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Witness Version</Label>
+                      <Badge variant="secondary">{decodedAddress.witnessVersion}</Badge>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Checksum</Label>
-                  <code className="block p-2 bg-muted rounded font-mono text-sm break-all">
-                    {decodedAddress.checksum}
-                  </code>
-                </div>
+                
+                {decodedAddress.witnessVersion !== undefined && (
+                  <div className="p-4 bg-accent/10 rounded-lg border border-accent/20">
+                    <h5 className="font-medium text-sm mb-2">SegWit Address Details</h5>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Format:</span>
+                        <span>Bech32{decodedAddress.witnessVersion === 1 ? 'm' : ''}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Program Length:</span>
+                        <span>{decodedAddress.hash.length / 2} bytes</span>
+                      </div>
+                      {decodedAddress.witnessVersion === 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Script Type:</span>
+                          <span>{decodedAddress.hash.length === 40 ? 'P2WPKH' : 'P2WSH'}</span>
+                        </div>
+                      )}
+                      {decodedAddress.witnessVersion === 1 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Script Type:</span>
+                          <span>Pay-to-Taproot</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
