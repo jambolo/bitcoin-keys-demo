@@ -2,7 +2,7 @@ import * as bitcoin from 'bitcoinjs-lib'
 import * as bip39 from 'bip39'
 import bs58 from 'bs58'
 import { bech32, bech32m } from 'bech32'
-import { Buffer } from 'buffer'
+import { Buffer } from '@/lib/polyfills'
 
 // Simple Bitcoin library implementation without WebAssembly dependencies
 // This is for educational demonstration purposes only

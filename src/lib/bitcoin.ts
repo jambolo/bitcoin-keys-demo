@@ -4,7 +4,7 @@ import * as bip39 from 'bip39'
 import bs58 from 'bs58'
 import { ECPairFactory } from 'ecpair'
 import * as tinysecp256k1 from 'tiny-secp256k1'
-import { Buffer } from 'buffer'
+import { Buffer } from '@/lib/polyfills'
 
 // Initialize ECPair with tiny-secp256k1
 let ECPair: any

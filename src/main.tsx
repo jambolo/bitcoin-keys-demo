@@ -12,6 +12,11 @@ import "./main.css"
 import "./styles/theme.css"
 import "./index.css"
 
+// Ensure Buffer is available before starting the app
+if (typeof window !== 'undefined') {
+  console.log('Buffer availability check:', !!window.Buffer)
+}
+
 createRoot(document.getElementById('root')!).render(
   <ErrorBoundary FallbackComponent={ErrorFallback}>
     <App />

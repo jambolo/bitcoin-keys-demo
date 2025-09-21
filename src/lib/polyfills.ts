@@ -1,5 +1,5 @@
 // Browser polyfills for Node.js crypto libraries
-import { Buffer } from 'buffer'
+import { Buffer as BufferPolyfill } from 'buffer'
 import process from 'process'
 
 // Get reliable reference to global object
@@ -11,58 +11,54 @@ const globalRef = (function() {
   throw new Error('Unable to locate global object')
 })()
 
-// Make Buffer available globally in all possible ways
-globalRef.Buffer = Buffer
-globalRef.global = globalRef.global || globalRef
-globalRef.process = process
-
-// Handle the specific "buffer_1.Buffer" pattern that causes the error
-globalRef.buffer_1 = { Buffer, alloc: Buffer.alloc }
-
-// For window environments
-if (typeof window !== 'undefined') {
-  ;(window as any).Buffer = Buffer
-  ;(window as any).process = process
-  ;(window as any).global = window
-  ;(window as any).buffer_1 = { Buffer, alloc: Buffer.alloc }
-}
-
-// For globalThis environments
-if (typeof globalThis !== 'undefined') {
-  ;(globalThis as any).Buffer = Buffer
-  ;(globalThis as any).process = process
-  ;(globalThis as any).buffer_1 = { Buffer, alloc: Buffer.alloc }
-}
-
-// For Node-style global
-if (typeof global !== 'undefined') {
-  ;(global as any).Buffer = Buffer
-  ;(global as any).process = process
-  ;(global as any).buffer_1 = { Buffer, alloc: Buffer.alloc }
-}
-
-// Handle module-style exports for CommonJS compatibility
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { Buffer, alloc: Buffer.alloc }
-  module.exports.Buffer = Buffer
-}
-
-// Verify polyfills are working
+// Set up all possible global references with comprehensive error handling
 try {
-  const testBuffer = Buffer.from('test', 'utf8')
-  if (testBuffer.toString() !== 'test') {
-    console.warn('Buffer polyfill may not be working correctly')
-  }
-  
-  // Test the specific buffer_1.Buffer.alloc pattern from the error
-  if (globalRef.buffer_1 && globalRef.buffer_1.Buffer && globalRef.buffer_1.Buffer.alloc) {
-    const testAlloc = globalRef.buffer_1.Buffer.alloc(4)
-    if (!testAlloc || testAlloc.length !== 4) {
-      console.warn('buffer_1.Buffer.alloc polyfill may not be working correctly')
-    }
-  }
-} catch (error) {
-  console.error('Buffer polyfill verification failed:', error)
+  globalRef.Buffer = BufferPolyfill
+  globalRef.global = globalRef
+  globalRef.process = process
+} catch (e) {
+  console.warn('Failed to set up some global polyfills:', e)
 }
 
-export { Buffer, process }
+// For module resolution patterns that cause externalization errors
+if (typeof window !== 'undefined') {
+  try {
+    ;(window as any).Buffer = BufferPolyfill
+    ;(window as any).process = process
+    ;(window as any).global = window
+  } catch (e) {
+    console.warn('Failed to set up window polyfills:', e)
+  }
+}
+
+if (typeof globalThis !== 'undefined') {
+  try {
+    ;(globalThis as any).Buffer = BufferPolyfill
+    ;(globalThis as any).process = process
+  } catch (e) {
+    console.warn('Failed to set up globalThis polyfills:', e)
+  }
+}
+
+if (typeof global !== 'undefined') {
+  try {
+    ;(global as any).Buffer = BufferPolyfill
+    ;(global as any).process = process
+  } catch (e) {
+    console.warn('Failed to set up global polyfills:', e)
+  }
+}
+
+// Handle potential module exports patterns
+try {
+  // For dynamic imports that might look for buffer module
+  ;(globalRef as any)['buffer'] = { Buffer: BufferPolyfill }
+  ;(globalRef as any)['Buffer'] = BufferPolyfill
+} catch (e) {
+  // Ignore errors during polyfill setup
+}
+
+// Export for direct use
+export const Buffer = BufferPolyfill
+export { process }
+export default BufferPolyfill

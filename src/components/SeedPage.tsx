@@ -12,7 +12,7 @@ import { Copy, Shuffle, ArrowRight, Key } from '@phosphor-icons/react'
 import * as bip39 from 'bip39'
 import { BIP32Factory } from 'bip32'
 import * as ecc from 'tiny-secp256k1'
-import { Buffer } from 'buffer'
+import { Buffer } from '@/lib/polyfills'
 import { 
   privateKeyFromHex as importedPrivateKeyFromHex
 } from '@/lib/bitcoin'

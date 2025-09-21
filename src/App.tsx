@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { BitcoinErrorBoundary } from '@/components/BitcoinErrorBoundary'
 import { PrivateKeyPage } from '@/components/PrivateKeyPage'
 import { PublicKeyPage } from '@/components/PublicKeyPage'
 import { AddressPage } from '@/components/AddressPage'
@@ -47,23 +48,33 @@ function App() {
           </TabsList>
 
           <TabsContent value="private-key">
-            <PrivateKeyPage />
+            <BitcoinErrorBoundary fallbackTitle="Private Key Error">
+              <PrivateKeyPage />
+            </BitcoinErrorBoundary>
           </TabsContent>
 
           <TabsContent value="public-key">
-            <PublicKeyPage />
+            <BitcoinErrorBoundary fallbackTitle="Public Key Error">
+              <PublicKeyPage />
+            </BitcoinErrorBoundary>
           </TabsContent>
 
           <TabsContent value="address">
-            <AddressPage />
+            <BitcoinErrorBoundary fallbackTitle="Address Error">
+              <AddressPage />
+            </BitcoinErrorBoundary>
           </TabsContent>
 
           <TabsContent value="mini-key">
-            <MiniKeyPage />
+            <BitcoinErrorBoundary fallbackTitle="Mini Key Error">
+              <MiniKeyPage />
+            </BitcoinErrorBoundary>
           </TabsContent>
 
           <TabsContent value="seed">
-            <SeedPage />
+            <BitcoinErrorBoundary fallbackTitle="Seed Phrase Error">
+              <SeedPage />
+            </BitcoinErrorBoundary>
           </TabsContent>
         </Tabs>
       </div>
