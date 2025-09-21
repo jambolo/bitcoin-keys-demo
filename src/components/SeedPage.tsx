@@ -348,7 +348,8 @@ export function SeedPage() {
             <div className="text-sm text-amber-800 dark:text-amber-200 space-y-2">
               <p>
                 <strong>BIP-39</strong> defines how mnemonic phrases are generated and converted to binary seeds. 
-                The seed is created using PBKDF2 with 2048 iterations and an optional passphrase.
+                The seed is created from the seed phrase text using PBKDF2 with 2048 iterations and an optional passphrase.
+                Note that the seed phrase does not have to be a valid BIP-39 seed phrase - any text can be used as input.
               </p>
               <p>
                 <strong>BIP-32</strong> defines hierarchical deterministic (HD) wallet structure, allowing generation 
