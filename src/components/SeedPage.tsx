@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Copy, Shuffle, ArrowRight, Key } from '@phosphor-icons/react'
 import * as bip39 from 'bip39'
 
@@ -18,6 +19,7 @@ export function SeedPage() {
   // Persistent inputs using useKV
   const [seedPhrase, setSeedPhrase] = useKV('seed-phrase', '')
   const [derivationPath, setDerivationPath] = useKV('seed-derivation-path', "m/44'/0'/0'/0/0")
+  const [selectedWordCount, setSelectedWordCount] = useKV('seed-word-count', '12')
   
   const [seedValidation, setSeedValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
   const [masterSeed, setMasterSeed] = useState('')
@@ -107,7 +109,9 @@ export function SeedPage() {
   }, [seedPhrase])
 
   const generateRandomSeed = () => {
-    const mnemonic = bip39.generateMnemonic()
+    const wordCount = parseInt(selectedWordCount || '12')
+    const strength = ((wordCount - 12) / 3) * 32 + 128 // 128, 160, 192, 224, 256 bits
+    const mnemonic = bip39.generateMnemonic(strength)
     setSeedPhrase(mnemonic)
   }
 
@@ -147,18 +151,31 @@ export function SeedPage() {
                 className="font-mono text-sm min-h-[80px]"
                 rows={3}
               />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={generateRandomSeed}
-                title="Generate Random"
-                className="self-start"
-              >
-                <Shuffle size={16} />
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Select value={selectedWordCount} onValueChange={setSelectedWordCount}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="12">12</SelectItem>
+                    <SelectItem value="15">15</SelectItem>
+                    <SelectItem value="18">18</SelectItem>
+                    <SelectItem value="21">21</SelectItem>
+                    <SelectItem value="24">24</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={generateRandomSeed}
+                  title="Generate Random"
+                >
+                  <Shuffle size={16} />
+                </Button>
+              </div>
             </div>
             <div className="text-xs text-muted-foreground">
-              BIP-39 mnemonic phrases use a standardized word list for generating seeds
+              BIP-39 mnemonic phrases use a standardized word list for generating seeds. Select word count and click shuffle to generate.
             </div>
           </div>
 
