@@ -240,7 +240,7 @@ export function generateMiniKey(): string {
   
   // Generate random mini keys until we find one that passes the check
   let attempts = 0
-  const maxAttempts = 10000
+  const maxAttempts = 100000
   
   while (attempts < maxAttempts) {
     // Start with 'S' and generate 29 random characters
@@ -263,8 +263,28 @@ export function generateMiniKey(): string {
     attempts++
   }
   
-  // Fallback to known good mini key if generation fails
-  return 'S6c56bnXQiBjk9mqSYE7ykVQ7NzrRy'
+  // If we somehow fail after 100k attempts (extremely unlikely), 
+  // generate using a different approach
+  while (true) {
+    try {
+      let miniKey = 'S'
+      // Use crypto.getRandomValues for better randomness
+      const randomBytes = new Uint8Array(29)
+      crypto.getRandomValues(randomBytes)
+      
+      for (let i = 0; i < 29; i++) {
+        miniKey += chars[randomBytes[i] % chars.length]
+      }
+      
+      const checkStr = miniKey + '?'
+      const hash = bitcoin.crypto.sha256(Buffer.from(checkStr, 'utf8'))
+      if (hash[0] === 0) {
+        return miniKey
+      }
+    } catch (error) {
+      // Continue trying
+    }
+  }
 }
 
 export function validateMiniKey(miniKey: string): { valid: boolean; error?: string } {

@@ -12,6 +12,7 @@ import {
   validateMiniKey,
   miniKeyToPrivateKey,
   privateKeyFromHex,
+  encodeWif,
   BitcoinKeyData
 } from '@/lib/bitcoin'
 import { QRCodeDisplay } from '@/components/QRCodeDisplay'
@@ -300,6 +301,66 @@ export function MiniKeyPage() {
                         />
                       </div>
                     </div>
+
+                    {/* WIF Formats */}
+                    <div>
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">WIF Formats</Label>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {/* Compressed WIF */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Compressed WIF</Label>
+                          <div className="flex gap-4 items-start">
+                            <div className="flex-1">
+                              <div className="flex gap-2">
+                                <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
+                                  {derivedData.privateKeyWif}
+                                </code>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => copyToClipboard(derivedData.privateKeyWif || '')}
+                                  title="Copy"
+                                >
+                                  <Copy size={16} />
+                                </Button>
+                              </div>
+                            </div>
+                            <QRCodeDisplay 
+                              value={derivedData.privateKeyWif || ''} 
+                              title="Compressed WIF" 
+                              size={80}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Uncompressed WIF */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Uncompressed WIF</Label>
+                          <div className="flex gap-4 items-start">
+                            <div className="flex-1">
+                              <div className="flex gap-2">
+                                <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
+                                  {derivedData.privateKeyHex && encodeWif(derivedData.privateKeyHex, false)}
+                                </code>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => copyToClipboard(derivedData.privateKeyHex && encodeWif(derivedData.privateKeyHex, false) || '')}
+                                  title="Copy"
+                                >
+                                  <Copy size={16} />
+                                </Button>
+                              </div>
+                            </div>
+                            <QRCodeDisplay 
+                              value={derivedData.privateKeyHex && encodeWif(derivedData.privateKeyHex, false) || ''} 
+                              title="Uncompressed WIF" 
+                              size={80}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -311,15 +372,12 @@ export function MiniKeyPage() {
             <h4 className="font-semibold text-amber-900 dark:text-amber-100 mb-2">About Bitcoin Mini Keys</h4>
             <div className="text-sm text-amber-800 dark:text-amber-200 space-y-2">
               <p>
-                Mini keys were a compact way to represent Bitcoin private keys, historically used by some applications 
+                Mini keys are a compact way to represent Bitcoin private keys, historically used by some applications 
                 like Casascius physical bitcoins. They are 30 characters long and start with 'S'.
               </p>
               <p>
                 The format includes a built-in check: SHA256(minikey + '?') must have a first byte of 0x00. 
                 This provides roughly 99.6% rejection of invalid strings.
-              </p>
-              <p className="font-semibold">
-                Note: Mini keys are less common in modern Bitcoin software and are provided here for educational purposes.
               </p>
             </div>
           </div>

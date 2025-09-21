@@ -100,6 +100,13 @@ export function AddressPage() {
     setDerivedData(data)
   }, [wifInput, hexInput, pubkeyInput, hashInput])
 
+  // Auto-populate validation input with generated taproot address
+  useEffect(() => {
+    if (derivedData?.taprootAddress && derivedData.taprootAddress !== 'N/A' && !validationInput) {
+      setValidationInput(derivedData.taprootAddress)
+    }
+  }, [derivedData, validationInput, setValidationInput])
+
   // Handle address decoding
   useEffect(() => {
     if (addressInput) {
