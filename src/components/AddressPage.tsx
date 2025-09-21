@@ -1,6 +1,7 @@
 // Import polyfills first
 import '@/lib/polyfills'
 import { Buffer } from 'buffer'
+import * as bitcoin from 'bitcoinjs-lib'
 
 import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
@@ -44,23 +45,57 @@ export function AddressPage() {
     } else if (hexInput && isValidHex(hexInput, 64)) {
       data = privateKeyFromHex(hexInput)
     } else if (pubkeyInput && isValidHex(pubkeyInput)) {
-      // Simplified: create demo data from public key
-      data = {
-        publicKeyHex: pubkeyInput,
-        publicKeyHash: pubkeyInput.slice(-40), // Last 20 bytes for demo
-        p2pkhAddress: '1...' + pubkeyInput.slice(-6),
-        p2shAddress: '3...' + pubkeyInput.slice(-6),
-        bech32Address: 'bc1q...' + pubkeyInput.slice(-26),
-        taprootAddress: 'bc1p...' + pubkeyInput.slice(-30)
+      // Generate real addresses from public key
+      try {
+        const pubkeyBuffer = Buffer.from(pubkeyInput, 'hex')
+        const hash160Buffer = bitcoin.crypto.hash160(pubkeyBuffer)
+        const publicKeyHash = Buffer.from(hash160Buffer).toString('hex')
+        
+        const p2pkh = bitcoin.payments.p2pkh({ pubkey: pubkeyBuffer })
+        const p2wpkh = bitcoin.payments.p2wpkh({ pubkey: pubkeyBuffer })
+        const p2sh = bitcoin.payments.p2sh({ redeem: p2wpkh })
+        
+        let taprootAddress = 'N/A'
+        try {
+          if (pubkeyBuffer.length === 33) {
+            const p2tr = bitcoin.payments.p2tr({ pubkey: pubkeyBuffer.subarray(1) })
+            taprootAddress = p2tr.address || 'N/A'
+          }
+        } catch {
+          // Taproot generation failed
+        }
+        
+        data = {
+          publicKeyHex: pubkeyInput,
+          publicKeyHash,
+          p2pkhAddress: p2pkh.address || 'N/A',
+          p2shAddress: p2sh.address || 'N/A',
+          bech32Address: p2wpkh.address || 'N/A',
+          taprootAddress
+        }
+      } catch {
+        // Invalid public key
+        data = null
       }
     } else if (hashInput && isValidHex(hashInput, 40)) {
-      // Create demo data from hash
-      data = {
-        publicKeyHash: hashInput,
-        p2pkhAddress: '1...' + hashInput.slice(-6),
-        p2shAddress: '3...' + hashInput.slice(-6),
-        bech32Address: 'bc1q...' + hashInput.slice(-26),
-        taprootAddress: 'bc1p...' + hashInput.slice(-30)
+      // Generate addresses from hash160
+      try {
+        const hashBuffer = Buffer.from(hashInput, 'hex')
+        
+        const p2pkh = bitcoin.payments.p2pkh({ hash: hashBuffer })
+        const p2wpkh = bitcoin.payments.p2wpkh({ hash: hashBuffer })
+        const p2sh = bitcoin.payments.p2sh({ redeem: p2wpkh })
+        
+        data = {
+          publicKeyHash: hashInput,
+          p2pkhAddress: p2pkh.address || 'N/A',
+          p2shAddress: p2sh.address || 'N/A',
+          bech32Address: p2wpkh.address || 'N/A',
+          taprootAddress: 'N/A' // Cannot derive taproot from hash160 alone
+        }
+      } catch {
+        // Invalid hash
+        data = null
       }
     }
 

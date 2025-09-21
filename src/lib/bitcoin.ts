@@ -43,8 +43,19 @@ export function privateKeyFromWif(wif: string): BitcoinKeyData | null {
     const hash160Buffer = bitcoin.crypto.hash160(Buffer.from(keyPair.publicKey))
     const publicKeyHash = Buffer.from(hash160Buffer).toString('hex')
     
-    // Generate basic addresses
+    // Generate addresses using bitcoinjs-lib
     const p2pkh = bitcoin.payments.p2pkh({ pubkey: Buffer.from(keyPair.publicKey) })
+    const p2wpkh = bitcoin.payments.p2wpkh({ pubkey: Buffer.from(keyPair.publicKey) })
+    const p2sh = bitcoin.payments.p2sh({ redeem: p2wpkh })
+    
+    // For Taproot, we need to handle it differently as it's a newer format
+    let taprootAddress = 'N/A'
+    try {
+      const p2tr = bitcoin.payments.p2tr({ pubkey: Buffer.from(keyPair.publicKey).subarray(1, 33) })
+      taprootAddress = p2tr.address || 'N/A'
+    } catch {
+      // Taproot generation failed, use N/A
+    }
 
     return {
       privateKeyWif: wif,
@@ -53,9 +64,9 @@ export function privateKeyFromWif(wif: string): BitcoinKeyData | null {
       publicKeyHex,
       publicKeyHash,
       p2pkhAddress: p2pkh.address || 'N/A',
-      p2shAddress: '3...' + (publicKeyHash || '').slice(-6), // Demo format
-      bech32Address: 'bc1q' + (publicKeyHash || '').slice(-26), // Demo format
-      taprootAddress: 'bc1p' + (publicKeyHash || '').slice(-30) // Demo format
+      p2shAddress: p2sh.address || 'N/A',
+      bech32Address: p2wpkh.address || 'N/A',
+      taprootAddress
     }
   } catch {
     return null
