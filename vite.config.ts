@@ -25,7 +25,6 @@ export default defineConfig({
     alias: {
       '@': resolve(projectRoot, 'src'),
       buffer: 'buffer',
-      process: 'process/browser',
       util: 'util',
     }
   },
@@ -35,7 +34,7 @@ export default defineConfig({
     'require': 'undefined'
   },
   optimizeDeps: {
-    include: ['bitcoinjs-lib', 'bip39', 'bs58', 'ecpair', 'bip32', 'tiny-secp256k1', 'buffer', 'process/browser', 'util'],
+    include: ['bitcoinjs-lib', 'bip39', 'bs58', 'ecpair', 'bip32', 'tiny-secp256k1', 'buffer', 'util'],
     exclude: []
   }
 });

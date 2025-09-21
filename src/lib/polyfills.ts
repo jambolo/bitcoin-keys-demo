@@ -1,6 +1,15 @@
 // Browser polyfills for Node.js modules
 import { Buffer as BufferPoly } from 'buffer'
-import ProcessPoly from 'process/browser'
+
+// Create a minimal process polyfill
+const ProcessPoly = {
+  env: {},
+  nextTick: (callback: () => void) => setTimeout(callback, 0),
+  version: 'v18.0.0',
+  versions: { node: '18.0.0' },
+  platform: 'browser',
+  browser: true
+}
 
 // Ensure global Buffer and process are available before anything else
 if (typeof globalThis !== 'undefined') {
