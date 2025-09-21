@@ -1,7 +1,3 @@
-// Import polyfills first
-import '@/lib/polyfills'
-import { Buffer } from 'buffer'
-
 import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'

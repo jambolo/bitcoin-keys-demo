@@ -1,6 +1,3 @@
-// Import polyfills first
-import '@/lib/polyfills'
-import { Buffer } from 'buffer'
 import * as bitcoin from 'bitcoinjs-lib'
 
 import { useState, useEffect } from 'react'

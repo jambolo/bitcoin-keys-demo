@@ -1,7 +1,3 @@
-// Import polyfills first, before any other dependencies  
-import '@/lib/polyfills'
-import { Buffer } from 'buffer'
-
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
