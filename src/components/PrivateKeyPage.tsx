@@ -21,9 +21,10 @@ import {
 } from '@/lib/bitcoin'
 
 export function PrivateKeyPage() {
-  const [privateKeyHex, setPrivateKeyHex] = useState('')
-  const [wifInput, setWifInput] = useState('')
-  const [validationInput, setValidationInput] = useState('')
+  // Persistent inputs using useKV
+  const [privateKeyHex, setPrivateKeyHex] = useKV('private-key-hex', '')
+  const [wifInput, setWifInput] = useKV('private-key-wif-input', '')
+  const [validationInput, setValidationInput] = useKV('private-key-validation-input', '')
   
   // Shared state for compressed WIF to be used by Public Key page
   const [sharedCompressedWif, setSharedCompressedWif] = useKV('shared-compressed-wif', '')

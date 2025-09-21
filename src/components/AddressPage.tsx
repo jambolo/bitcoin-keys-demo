@@ -3,6 +3,7 @@ import '@/lib/polyfills'
 import { Buffer } from 'buffer'
 
 import { useState, useEffect } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,12 +23,13 @@ import {
 } from '@/lib/bitcoin'
 
 export function AddressPage() {
-  const [wifInput, setWifInput] = useState('')
-  const [hexInput, setHexInput] = useState('')
-  const [pubkeyInput, setPubkeyInput] = useState('')
-  const [hashInput, setHashInput] = useState('')
-  const [addressInput, setAddressInput] = useState('')
-  const [validationInput, setValidationInput] = useState('')
+  // Persistent inputs using useKV
+  const [wifInput, setWifInput] = useKV('address-wif-input', '')
+  const [hexInput, setHexInput] = useKV('address-hex-input', '')
+  const [pubkeyInput, setPubkeyInput] = useKV('address-pubkey-input', '')
+  const [hashInput, setHashInput] = useKV('address-hash-input', '')
+  const [addressInput, setAddressInput] = useKV('address-decode-input', '')
+  const [validationInput, setValidationInput] = useKV('address-validation-input', '')
 
   const [derivedData, setDerivedData] = useState<BitcoinKeyData | null>(null)
   const [decodedAddress, setDecodedAddress] = useState<any>(null)

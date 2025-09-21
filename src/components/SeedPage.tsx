@@ -3,6 +3,7 @@ import '@/lib/polyfills'
 import { Buffer } from 'buffer'
 
 import { useState, useEffect } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,12 +15,14 @@ import { Copy, Shuffle, ArrowRight, Key } from '@phosphor-icons/react'
 import * as bip39 from 'bip39'
 
 export function SeedPage() {
-  const [seedPhrase, setSeedPhrase] = useState('')
+  // Persistent inputs using useKV
+  const [seedPhrase, setSeedPhrase] = useKV('seed-phrase', '')
+  const [derivationPath, setDerivationPath] = useKV('seed-derivation-path', "m/44'/0'/0'/0/0")
+  
   const [seedValidation, setSeedValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
   const [masterSeed, setMasterSeed] = useState('')
   const [masterPrivateKey, setMasterPrivateKey] = useState('')
   const [masterPublicKey, setMasterPublicKey] = useState('')
-  const [derivationPath, setDerivationPath] = useState("m/44'/0'/0'/0/0")
   const [derivedKeys, setDerivedKeys] = useState<Array<{
     path: string
     privateKey: string

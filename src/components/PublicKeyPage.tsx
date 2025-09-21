@@ -19,8 +19,10 @@ import {
 } from '@/lib/bitcoin'
 
 export function PublicKeyPage() {
-  const [wifInput, setWifInput] = useState('')
-  const [publicKeyInput, setPublicKeyInput] = useState('')
+  // Persistent inputs using useKV
+  const [wifInput, setWifInput] = useKV('public-key-wif-input', '')
+  const [publicKeyInput, setPublicKeyInput] = useKV('public-key-validation-input', '')
+  
   const [derivedData, setDerivedData] = useState<BitcoinKeyData | null>(null)
   const [validation, setValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
   
@@ -39,10 +41,22 @@ export function PublicKeyPage() {
     if (wifInput) {
       const data = privateKeyFromWif(wifInput)
       setDerivedData(data)
+      
+      // Auto-populate validation input with derived public key
+      if (data?.publicKeyHex && !publicKeyInput) {
+        setPublicKeyInput(data.publicKeyHex)
+      }
     } else {
       setDerivedData(null)
     }
-  }, [wifInput])
+  }, [wifInput, setPublicKeyInput])
+
+  // Update validation input when derived data changes
+  useEffect(() => {
+    if (derivedData?.publicKeyHex && !publicKeyInput) {
+      setPublicKeyInput(derivedData.publicKeyHex)
+    }
+  }, [derivedData, publicKeyInput, setPublicKeyInput])
 
   // Handle public key validation
   useEffect(() => {
