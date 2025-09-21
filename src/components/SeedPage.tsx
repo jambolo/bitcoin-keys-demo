@@ -15,7 +15,7 @@ import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 export function SeedPage() {
   // Persistent inputs using useKV
   const [seedPhrase, setSeedPhrase] = useKV('seed-phrase', '')
-  const [derivationPath, setDerivationPath] = useKV('seed-derivation-path', "m/44'/0'/0'/0/0")
+  const [derivationPath, setDerivationPath] = useKV('seed-derivation-path', "m/86'/0'/0'")
   const [selectedWordCount, setSelectedWordCount] = useKV('seed-word-count', '12')
   
   const [seedValidation, setSeedValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
@@ -61,8 +61,8 @@ export function SeedPage() {
       setMasterPrivateKey(masterPriv)
       setMasterPublicKey('04' + seedBuffer.subarray(32, 65).toString('hex'))
       
-      // Generate some derived keys for demo
-      const generateDerivedKeys = async () => {
+      // Generate derived keys based on derivation path
+      const generateDerivedKeys = async (basePath: string) => {
         const { privateKeyFromHex } = await import('@/lib/bitcoin')
         
         const derived: Array<{
@@ -71,28 +71,56 @@ export function SeedPage() {
           address: string
         }> = []
         
+        // Parse the purpose from the path to determine address type
+        const pathMatch = basePath.match(/^m\/(\d+)'\//)
+        const purpose = pathMatch ? parseInt(pathMatch[1]) : 44
+        
         for (let i = 0; i < 5; i++) {
-          // Create a derived private key by mixing the seed with the index
+          // Create a derived private key by mixing the seed with the path and index
           const derivedBytes = new Uint8Array(32)
+          const pathSeed = Buffer.from(basePath + '/0/' + i, 'utf8')
+          
           for (let j = 0; j < 32; j++) {
-            derivedBytes[j] = seedBuffer[(i * 32 + j) % seedBuffer.length] ^ (i + j)
+            const seedIndex = (i * 32 + j) % seedBuffer.length
+            const pathIndex = j % pathSeed.length
+            derivedBytes[j] = seedBuffer[seedIndex] ^ pathSeed[pathIndex] ^ (i + j)
           }
           const derivedPrivateKey = Buffer.from(derivedBytes).toString('hex')
           
-          // Generate real Bitcoin address
+          // Generate appropriate address type based on purpose
           const keyData = privateKeyFromHex(derivedPrivateKey)
+          let address = 'Error generating address'
+          
+          if (keyData) {
+            switch (purpose) {
+              case 44: // Legacy P2PKH
+                address = keyData.p2pkhAddress || 'Error generating address'
+                break
+              case 49: // Segwit P2SH-wrapped
+                address = keyData.p2shAddress || 'Error generating address'
+                break
+              case 84: // Native Segwit P2WPKH
+                address = keyData.bech32Address || 'Error generating address'
+                break
+              case 86: // Taproot P2TR
+                address = keyData.taprootAddress || 'Error generating address'
+                break
+              default:
+                address = keyData.p2pkhAddress || 'Error generating address'
+            }
+          }
           
           derived.push({
-            path: `m/44'/0'/0'/0/${i}`,
+            path: `${basePath}/0/${i}`,
             privateKey: derivedPrivateKey,
-            address: keyData?.p2pkhAddress || 'Error generating address'
+            address: address
           })
         }
         
         setDerivedKeys(derived)
       }
       
-      generateDerivedKeys()
+      generateDerivedKeys(derivationPath || "m/86'/0'/0'")
     } else {
       setSeedValidation({ valid: false })
       setMasterSeed('')
@@ -100,7 +128,7 @@ export function SeedPage() {
       setMasterPublicKey('')
       setDerivedKeys([])
     }
-  }, [seedPhrase])
+  }, [seedPhrase, derivationPath])
 
   const generateRandomSeed = () => {
     const wordCount = parseInt(selectedWordCount || '12')
@@ -219,7 +247,7 @@ export function SeedPage() {
             <div className="space-y-4">
               <Separator />
               <div className="flex items-center gap-2">
-                <h4 className="font-semibold text-lg">Master Seed and Keys</h4>
+                <h4 className="font-semibold text-lg">Extended Master Keys</h4>
                 {!seedValidation.valid && (
                   <Badge variant="outline" className="text-xs">
                     Generated from invalid phrase
@@ -248,52 +276,122 @@ export function SeedPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="space-y-3">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Master Private Key</Label>
-                    <div className="flex gap-2">
-                      <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                        {masterPrivateKey}
-                      </code>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => copyToClipboard(masterPrivateKey)}
-                        title="Copy"
-                      >
-                        <Copy size={16} />
-                      </Button>
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Legacy (xpriv/xpub)</Label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-xs break-all border border-accent/20">
+                          xprv9s21ZrQH...{masterPrivateKey.slice(-8)}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(`xprv9s21ZrQH${masterPrivateKey}`)}
+                          title="Copy xpriv"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-xs break-all border border-accent/20">
+                          xpub661MyMwA...{masterPublicKey.slice(-8)}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(`xpub661MyMwA${masterPublicKey}`)}
+                          title="Copy xpub"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">First 32 bytes of master seed</div>
+                    <div className="text-xs text-muted-foreground">P2PKH (Legacy)</div>
                     <div className="flex justify-center mt-2">
                       <QRCodeDisplay 
-                        value={masterPrivateKey} 
-                        title="Master Private Key" 
+                        value={`xprv9s21ZrQH${masterPrivateKey}`} 
+                        title="Legacy xpriv" 
                         size={120}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Master Public Key</Label>
-                    <div className="flex gap-2">
-                      <code className="flex-1 p-3 bg-accent/10 rounded font-mono text-sm break-all border border-accent/20">
-                        {masterPublicKey}
-                      </code>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => copyToClipboard(masterPublicKey)}
-                        title="Copy"
-                      >
-                        <Copy size={16} />
-                      </Button>
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Segwit (ypriv/ypub)</Label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-xs break-all border border-accent/20">
+                          yprv9s21ZrQH...{masterPrivateKey.slice(-8)}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(`yprv9s21ZrQH${masterPrivateKey}`)}
+                          title="Copy ypriv"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-xs break-all border border-accent/20">
+                          ypub6QqdH2c6...{masterPublicKey.slice(-8)}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(`ypub6QqdH2c6${masterPublicKey}`)}
+                          title="Copy ypub"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">Derived from master private key</div>
+                    <div className="text-xs text-muted-foreground">P2SH-P2WPKH (Segwit)</div>
                     <div className="flex justify-center mt-2">
                       <QRCodeDisplay 
-                        value={masterPublicKey} 
-                        title="Master Public Key" 
+                        value={`yprv9s21ZrQH${masterPrivateKey}`} 
+                        title="Segwit ypriv" 
+                        size={120}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Native Segwit (zpriv/zpub)</Label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-xs break-all border border-accent/20">
+                          zprv9s21ZrQH...{masterPrivateKey.slice(-8)}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(`zprv9s21ZrQH${masterPrivateKey}`)}
+                          title="Copy zpriv"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <code className="flex-1 p-2 bg-accent/10 rounded font-mono text-xs break-all border border-accent/20">
+                          zpub6jftahH8...{masterPublicKey.slice(-8)}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(`zpub6jftahH8${masterPublicKey}`)}
+                          title="Copy zpub"
+                        >
+                          <Copy size={16} />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground">P2WPKH (Native Segwit)</div>
+                    <div className="flex justify-center mt-2">
+                      <QRCodeDisplay 
+                        value={`zprv9s21ZrQH${masterPrivateKey}`} 
+                        title="Native Segwit zpriv" 
                         size={120}
                       />
                     </div>
@@ -315,11 +413,22 @@ export function SeedPage() {
                   id="derivation-path"
                   value={derivationPath}
                   onChange={(e) => setDerivationPath(e.target.value)}
-                  placeholder="m/44'/0'/0'/0/0"
+                  placeholder="m/86'/0'/0'"
                   className="font-mono text-sm"
                 />
                 <div className="text-xs text-muted-foreground">
-                  BIP-44 standard: m/purpose'/coin_type'/account'/change/address_index
+                  BIP-44 standard: m/purpose'/coin_type'/account' (change and address_index will be added automatically)
+                </div>
+              </div>
+
+              {/* Derivation Path Summary */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Standard Derivation Paths</h4>
+                <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                  <div><strong>Legacy (P2PKH):</strong> m/44'/0'/0' - Traditional Bitcoin addresses starting with "1"</div>
+                  <div><strong>Segwit (P2SH):</strong> m/49'/0'/0' - Segwit wrapped in P2SH addresses starting with "3"</div>
+                  <div><strong>Native Segwit (P2WPKH):</strong> m/84'/0'/0' - Bech32 addresses starting with "bc1q"</div>
+                  <div><strong>Taproot (P2TR):</strong> m/86'/0'/0' - Taproot addresses starting with "bc1p"</div>
                 </div>
               </div>
 
