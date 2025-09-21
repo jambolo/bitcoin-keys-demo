@@ -3,6 +3,7 @@ import '@/lib/polyfills'
 import { Buffer } from 'buffer'
 
 import { useState, useEffect } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,6 +23,16 @@ export function PublicKeyPage() {
   const [publicKeyInput, setPublicKeyInput] = useState('')
   const [derivedData, setDerivedData] = useState<BitcoinKeyData | null>(null)
   const [validation, setValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
+  
+  // Get shared compressed WIF from Private Key page
+  const [sharedCompressedWif] = useKV('shared-compressed-wif', '')
+  
+  // Initialize WIF input with shared compressed WIF on first load
+  useEffect(() => {
+    if (sharedCompressedWif && !wifInput) {
+      setWifInput(sharedCompressedWif)
+    }
+  }, [sharedCompressedWif, wifInput])
 
   // Handle WIF input for derivation
   useEffect(() => {

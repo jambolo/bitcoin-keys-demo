@@ -3,6 +3,7 @@ import '@/lib/polyfills'
 import { Buffer } from 'buffer'
 
 import { useState, useEffect } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -23,6 +24,9 @@ export function PrivateKeyPage() {
   const [privateKeyHex, setPrivateKeyHex] = useState('')
   const [wifInput, setWifInput] = useState('')
   const [validationInput, setValidationInput] = useState('')
+  
+  // Shared state for compressed WIF to be used by Public Key page
+  const [sharedCompressedWif, setSharedCompressedWif] = useKV('shared-compressed-wif', '')
 
   // Encoding section
   const [compressedWif, setCompressedWif] = useState('')
@@ -49,8 +53,9 @@ export function PrivateKeyPage() {
       setCompressedSteps(cSteps)
       setUncompressedSteps(uSteps)
       
-      // Automatically populate WIF inputs with compressed WIF
+      // Update shared compressed WIF for Public Key page
       if (compressed) {
+        setSharedCompressedWif(compressed)
         setWifInput(compressed)
         setValidationInput(compressed)
       }
@@ -62,8 +67,9 @@ export function PrivateKeyPage() {
       // Clear WIF inputs when private key is invalid
       setWifInput('')
       setValidationInput('')
+      // Don't clear shared state here to preserve cross-page functionality
     }
-  }, [privateKeyHex])
+  }, [privateKeyHex, setSharedCompressedWif])
 
   // Handle WIF input
   useEffect(() => {
