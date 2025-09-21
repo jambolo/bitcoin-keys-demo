@@ -58,7 +58,7 @@ export function MiniKeyPage() {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-3xl font-bold mb-2">Mini Key Page</h2>
+        <h2 className="text-3xl font-bold mb-2">Mini Key</h2>
         <p className="text-muted-foreground">
           Demonstrates Bitcoin mini private key validation and key derivation.
         </p>

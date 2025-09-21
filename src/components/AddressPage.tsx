@@ -107,7 +107,7 @@ export function AddressPage() {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-3xl font-bold mb-2">Address Page</h2>
+        <h2 className="text-3xl font-bold mb-2">Address</h2>
         <p className="text-muted-foreground">
           Generate Bitcoin addresses from keys and decode existing addresses.
         </p>

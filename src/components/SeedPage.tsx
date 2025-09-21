@@ -98,7 +98,7 @@ export function SeedPage() {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-3xl font-bold mb-2">Seed Phrase Page</h2>
+        <h2 className="text-3xl font-bold mb-2">Seed Phrase</h2>
         <p className="text-muted-foreground">
           Generate and validate BIP-39 seed phrases and demonstrate hierarchical deterministic key derivation.
         </p>

@@ -55,7 +55,7 @@ export function PublicKeyPage() {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-3xl font-bold mb-2">Public Key Page</h2>
+        <h2 className="text-3xl font-bold mb-2">Public Key</h2>
         <p className="text-muted-foreground">
           Derive public keys from private keys and validate public key formats.
         </p>
