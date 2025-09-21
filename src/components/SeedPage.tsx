@@ -1,5 +1,6 @@
 // Import polyfills first, before any crypto libraries
 import '@/lib/polyfills'
+import { Buffer } from 'buffer'
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -46,12 +47,13 @@ export function SeedPage() {
         
         // Generate master seed and keys
         const seed = bip39.mnemonicToSeedSync(seedPhrase)
-        setMasterSeed(seed.toString('hex'))
+        const seedBuffer = Buffer.from(seed)
+        setMasterSeed(seedBuffer.toString('hex'))
         
         // Simplified master key generation for demo
-        const masterPriv = seed.subarray(0, 32).toString('hex')
+        const masterPriv = seedBuffer.subarray(0, 32).toString('hex')
         setMasterPrivateKey(masterPriv)
-        setMasterPublicKey('04' + seed.subarray(32, 65).toString('hex'))
+        setMasterPublicKey('04' + seedBuffer.subarray(32, 65).toString('hex'))
         
         // Generate some derived keys for demo
         const derived: Array<{
@@ -60,7 +62,7 @@ export function SeedPage() {
           address: string
         }> = []
         for (let i = 0; i < 5; i++) {
-          const derivedSeed = seed.subarray(i * 6, i * 6 + 32)
+          const derivedSeed = seedBuffer.subarray(i * 6, i * 6 + 32)
           derived.push({
             path: `m/44'/0'/0'/0/${i}`,
             privateKey: derivedSeed.toString('hex'),

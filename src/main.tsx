@@ -1,3 +1,6 @@
+// Import polyfills first, before any other dependencies
+import './lib/polyfills'
+
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from "react-error-boundary";
 import "@github/spark/spark"

@@ -32,7 +32,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ['tiny-secp256k1'],
-    include: ['buffer', 'crypto-browserify', 'stream-browserify', 'process']
+    include: ['buffer', 'crypto-browserify', 'stream-browserify', 'process', 'bip39', 'bitcoinjs-lib', 'ecpair', 'bs58']
   },
   define: {
     global: 'globalThis',

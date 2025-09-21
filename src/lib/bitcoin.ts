@@ -1,5 +1,6 @@
 // Import polyfills first, before any other dependencies
 import '@/lib/polyfills'
+import { Buffer } from 'buffer'
 
 import * as bitcoin from 'bitcoinjs-lib'
 import * as bip39 from 'bip39'
