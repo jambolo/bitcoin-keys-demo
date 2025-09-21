@@ -143,10 +143,10 @@ export function MiniKeyPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ArrowRight className="text-accent" />
-            Mini Key Derivation
+            Mini Key Private Key Derivation
           </CardTitle>
           <CardDescription>
-            Enter or use the generated mini key above to derive the full key chain
+            Enter or use the generated mini key above to derive the private key and full key chain
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -215,11 +215,11 @@ export function MiniKeyPage() {
                 </div>
               </div>
 
-              {/* Derived Key Chain */}
+              {/* Derived Private Key Chain */}
               {derivedData && validation.valid && (
                 <div className="space-y-4">
                   <Separator />
-                  <h4 className="font-semibold text-lg">Derived Key Chain</h4>
+                  <h4 className="font-semibold text-lg">Derived Private Key</h4>
                   
                   <div className="space-y-4">
                     <div>
@@ -238,6 +238,25 @@ export function MiniKeyPage() {
                         </Button>
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">30-character compact private key format</div>
+                    </div>
+
+                    {/* Private Key Derivation Process */}
+                    <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-lg border">
+                      <h5 className="font-semibold text-sm mb-3">Private Key Derivation Process</h5>
+                      <div className="space-y-3 text-sm">
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono text-xs bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded">Step 1</span>
+                          <span>Take the mini key: <code className="font-mono bg-muted px-1 py-0.5 rounded text-xs">{miniKeyInput}</code></span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono text-xs bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded">Step 2</span>
+                          <span>Apply SHA256 hash function</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono text-xs bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded">Step 3</span>
+                          <span>Result is the 32-byte private key in hexadecimal format</span>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="text-center text-muted-foreground">
