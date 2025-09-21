@@ -37,6 +37,15 @@ export function AddressPage() {
 
   // Shared state - get taproot address from other pages if available
   const [sharedTaprootAddress] = useKV('shared-taproot-address', '')
+  // Get shared compressed WIF from other pages
+  const [sharedCompressedWif] = useKV('shared-compressed-wif', '')
+
+  // Sync with shared compressed WIF from other pages
+  useEffect(() => {
+    if (sharedCompressedWif && !wifInput) {
+      setWifInput(sharedCompressedWif)
+    }
+  }, [sharedCompressedWif, wifInput, setWifInput])
 
   // Auto-populate validation input with shared taproot address
   useEffect(() => {

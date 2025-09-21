@@ -38,10 +38,35 @@ export function PrivateKeyPage() {
   // Validation section
   const [validation, setValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
 
-  // Initialize with random private key only on first ever load when no private key exists
+  // Sync with shared compressed WIF from other pages (only if it represents a different private key)
+  useEffect(() => {
+    const syncWithShared = async () => {
+      if (sharedCompressedWif && privateKeyHex) {
+        // Check if the shared WIF corresponds to the current private key
+        const currentCompressed = await encodeWif(privateKeyHex, true)
+        if (currentCompressed !== sharedCompressedWif) {
+          // Different keys, sync from shared state
+          const decoded = await decodeWif(sharedCompressedWif)
+          if (decoded) {
+            setPrivateKeyHex(decoded.privateKeyHex)
+          }
+        }
+      } else if (sharedCompressedWif && !privateKeyHex) {
+        // No current private key, sync from shared state
+        const decoded = await decodeWif(sharedCompressedWif)
+        if (decoded) {
+          setPrivateKeyHex(decoded.privateKeyHex)
+        }
+      }
+    }
+    
+    syncWithShared()
+  }, [sharedCompressedWif, privateKeyHex, setPrivateKeyHex])
+
+  // Initialize with random private key only on first ever load when no keys exist
   useEffect(() => {
     const initializeRandomKey = async () => {
-      if (!privateKeyHex) {
+      if (!privateKeyHex && !sharedCompressedWif) {
         const randomWif = await generateRandomPrivateKey()
         const decoded = await decodeWif(randomWif)
         if (decoded) {
@@ -51,7 +76,7 @@ export function PrivateKeyPage() {
     }
     
     initializeRandomKey()
-  }, []) // Remove dependencies to only run once on mount
+  }, [privateKeyHex, sharedCompressedWif, setPrivateKeyHex])
 
   // Handle private key hex input
   useEffect(() => {
@@ -67,12 +92,12 @@ export function PrivateKeyPage() {
         setCompressedSteps(cSteps)
         setUncompressedSteps(uSteps)
         
-        // Update shared compressed WIF for Public Key page
-        if (compressed) {
+        // Update shared compressed WIF for Public Key page (only if different)
+        if (compressed && compressed !== sharedCompressedWif) {
           setSharedCompressedWif(compressed)
-          setWifInput(compressed)
-          setValidationInput(compressed)
         }
+        setWifInput(compressed || '')
+        setValidationInput(compressed || '')
       } else {
         setCompressedWif('')
         setUncompressedWif('')

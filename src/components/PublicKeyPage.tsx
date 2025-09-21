@@ -23,14 +23,21 @@ export function PublicKeyPage() {
   const [validation, setValidation] = useState<{ valid: boolean; error?: string }>({ valid: false })
   
   // Get shared compressed WIF from Private Key page
-  const [sharedCompressedWif] = useKV('shared-compressed-wif', '')
+  const [sharedCompressedWif, setSharedCompressedWif] = useKV('shared-compressed-wif', '')
   
   // Always sync with shared compressed WIF from Private Key page when it changes
   useEffect(() => {
-    if (sharedCompressedWif) {
+    if (sharedCompressedWif && sharedCompressedWif !== wifInput) {
       setWifInput(sharedCompressedWif)
     }
-  }, [sharedCompressedWif, setWifInput])
+  }, [sharedCompressedWif, wifInput, setWifInput])
+
+  // Update shared state when local wifInput changes (unless it came from shared state)
+  useEffect(() => {
+    if (wifInput && wifInput !== sharedCompressedWif) {
+      setSharedCompressedWif(wifInput)
+    }
+  }, [wifInput, sharedCompressedWif, setSharedCompressedWif])
 
   // Initialize with random key only on first load if no shared WIF exists
   useEffect(() => {
@@ -77,6 +84,8 @@ export function PublicKeyPage() {
   const generateRandom = async () => {
     const randomWif = await generateRandomPrivateKey()
     setWifInput(randomWif)
+    // Update shared state so Private Key page stays in sync
+    setSharedCompressedWif(randomWif)
   }
 
   const copyToClipboard = (text: string) => {
