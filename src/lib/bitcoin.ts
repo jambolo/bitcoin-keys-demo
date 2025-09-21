@@ -1,3 +1,4 @@
+import './polyfills'
 import * as bitcoin from 'bitcoinjs-lib'
 import * as bip39 from 'bip39'
 import bs58 from 'bs58'
