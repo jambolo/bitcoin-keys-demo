@@ -86,12 +86,19 @@ export function encodeWif(privateKeyHex: string, compressed: boolean = true): st
   }
 }
 
-export function decodeWif(wif: string): { privateKeyHex: string; compressed: boolean; valid: boolean } | null {
+export function decodeWif(wif: string): { privateKeyHex: string; compressed: boolean; checksum: string; valid: boolean } | null {
   try {
+    // First validate using ECPair
     const keyPair = ECPair.fromWIF(wif)
+    
+    // Manually decode to get checksum
+    const decoded = bs58.decode(wif)
+    const checksum = Buffer.from(decoded.subarray(-4)).toString('hex')
+    
     return {
       privateKeyHex: Buffer.from(keyPair.privateKey!).toString('hex'),
       compressed: keyPair.compressed,
+      checksum,
       valid: true
     }
   } catch {

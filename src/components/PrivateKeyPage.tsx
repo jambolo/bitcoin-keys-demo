@@ -291,7 +291,7 @@ export function PrivateKeyPage() {
                 </div>
                 <div>
                   <Label className="text-xs uppercase tracking-wide text-muted-foreground">Checksum</Label>
-                  <code className="block p-2 bg-muted rounded font-mono text-sm">Last 4 bytes</code>
+                  <code className="block p-2 bg-muted rounded font-mono text-sm">{decodedData.checksum}</code>
                 </div>
               </div>
             </div>
