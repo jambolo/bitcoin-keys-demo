@@ -59,20 +59,37 @@ export function SeedPage() {
         setMasterPublicKey('04' + seedBuffer.subarray(32, 65).toString('hex'))
         
         // Generate some derived keys for demo
-        const derived: Array<{
-          path: string
-          privateKey: string
-          address: string
-        }> = []
-        for (let i = 0; i < 5; i++) {
-          const derivedSeed = seedBuffer.subarray(i * 6, i * 6 + 32)
-          derived.push({
-            path: `m/44'/0'/0'/0/${i}`,
-            privateKey: derivedSeed.toString('hex'),
-            address: '1Demo' + derivedSeed.subarray(0, 4).toString('hex')
-          })
+        const generateDerivedKeys = async () => {
+          const { privateKeyFromHex } = await import('@/lib/bitcoin')
+          
+          const derived: Array<{
+            path: string
+            privateKey: string
+            address: string
+          }> = []
+          
+          for (let i = 0; i < 5; i++) {
+            // Create a derived private key by mixing the seed with the index
+            const derivedBytes = new Uint8Array(32)
+            for (let j = 0; j < 32; j++) {
+              derivedBytes[j] = seedBuffer[(i * 32 + j) % seedBuffer.length] ^ (i + j)
+            }
+            const derivedPrivateKey = Buffer.from(derivedBytes).toString('hex')
+            
+            // Generate real Bitcoin address
+            const keyData = privateKeyFromHex(derivedPrivateKey)
+            
+            derived.push({
+              path: `m/44'/0'/0'/0/${i}`,
+              privateKey: derivedPrivateKey,
+              address: keyData?.p2pkhAddress || 'Error generating address'
+            })
+          }
+          
+          setDerivedKeys(derived)
         }
-        setDerivedKeys(derived)
+        
+        generateDerivedKeys()
       } else {
         setSeedValidation({ valid: false, error: 'Invalid BIP-39 mnemonic phrase' })
         setMasterSeed('')
