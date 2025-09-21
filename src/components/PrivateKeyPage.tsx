@@ -48,11 +48,20 @@ export function PrivateKeyPage() {
       setUncompressedWif(uncompressed || '')
       setCompressedSteps(cSteps)
       setUncompressedSteps(uSteps)
+      
+      // Automatically populate WIF inputs with compressed WIF
+      if (compressed) {
+        setWifInput(compressed)
+        setValidationInput(compressed)
+      }
     } else {
       setCompressedWif('')
       setUncompressedWif('')
       setCompressedSteps(null)
       setUncompressedSteps(null)
+      // Clear WIF inputs when private key is invalid
+      setWifInput('')
+      setValidationInput('')
     }
   }, [privateKeyHex])
 
