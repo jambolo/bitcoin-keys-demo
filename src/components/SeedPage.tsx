@@ -206,7 +206,7 @@ export function SeedPage() {
                 <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                   <div>Word count: {seedPhrase.trim().split(/\s+/).length}</div>
                   <div>Language: English (BIP-39 standard)</div>
-                  <div>Entropy: {seedPhrase.trim().split(/\s+/).length * 10.33} bits (approximate)</div>
+                  <div>Entropy: {(seedPhrase.trim().split(/\s+/).length * 10.33).toFixed(2)} bits (approximate)</div>
                   <div>Checksum: {seedValidation.valid ? 'Valid' : 'Invalid or missing'}</div>
                 </div>
               </div>
