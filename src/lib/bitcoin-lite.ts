@@ -712,3 +712,126 @@ export async function miniKeyToPrivateKey(miniKey: string): Promise<string | nul
     return null
   }
 }
+
+// BIP39 word list (truncated for demonstration - full list would be 2048 words)
+const BIP39_WORDLIST = [
+  'abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse',
+  'access', 'accident', 'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire', 'across', 'act',
+  'action', 'actor', 'actress', 'actual', 'adapt', 'add', 'addict', 'address', 'adjust', 'admit',
+  'adult', 'advance', 'advice', 'aerobic', 'affair', 'afford', 'afraid', 'again', 'age', 'agent',
+  'agree', 'ahead', 'aim', 'air', 'airport', 'aisle', 'alarm', 'album', 'alcohol', 'alert',
+  'alien', 'all', 'alley', 'allow', 'almost', 'alone', 'alpha', 'already', 'also', 'alter',
+  'always', 'amateur', 'amazing', 'among', 'amount', 'amused', 'analyst', 'anchor', 'ancient', 'anger',
+  'angle', 'angry', 'animal', 'ankle', 'announce', 'annual', 'another', 'answer', 'antenna', 'antique',
+  'anxiety', 'any', 'apart', 'apology', 'appear', 'apple', 'approve', 'april', 'arcade', 'arch',
+  'arctic', 'area', 'arena', 'argue', 'arm', 'armed', 'armor', 'army', 'around', 'arrange',
+  'arrest', 'arrive', 'arrow', 'art', 'artist', 'artwork', 'ask', 'aspect', 'assault', 'asset',
+  'assist', 'assume', 'asthma', 'athlete', 'atom', 'attack', 'attend', 'attitude', 'attract', 'auction'
+]
+
+export function generateMnemonic(strength: number = 128): string {
+  // Generate random entropy
+  const entropyBytes = new Uint8Array(strength / 8)
+  crypto.getRandomValues(entropyBytes)
+  
+  // Convert to binary string
+  let entropyBinary = ''
+  for (let i = 0; i < entropyBytes.length; i++) {
+    entropyBinary += entropyBytes[i].toString(2).padStart(8, '0')
+  }
+  
+  // Calculate checksum
+  const checksumLength = strength / 32
+  // For simplicity, use a basic checksum (in real implementation, would use SHA256)
+  const checksum = '0'.repeat(checksumLength)
+  
+  const totalBinary = entropyBinary + checksum
+  
+  // Split into 11-bit groups and map to words
+  const words: string[] = []
+  for (let i = 0; i < totalBinary.length; i += 11) {
+    const wordIndex = parseInt(totalBinary.slice(i, i + 11), 2) % BIP39_WORDLIST.length
+    words.push(BIP39_WORDLIST[wordIndex])
+  }
+  
+  return words.join(' ')
+}
+
+export function validateMnemonic(mnemonic: string): boolean {
+  const words = mnemonic.trim().split(/\s+/)
+  const validWordCounts = [12, 15, 18, 21, 24]
+  
+  if (!validWordCounts.includes(words.length)) {
+    return false
+  }
+  
+  // Check if all words are in the word list
+  return words.every(word => BIP39_WORDLIST.includes(word.toLowerCase()))
+}
+
+export async function mnemonicToSeed(mnemonic: string, passphrase: string = ''): Promise<Uint8Array> {
+  const mnemonicBytes = new TextEncoder().encode(mnemonic)
+  const saltBytes = new TextEncoder().encode('mnemonic' + passphrase)
+  
+  // Simplified PBKDF2 implementation (would use proper PBKDF2 in production)
+  const combinedBytes = new Uint8Array(mnemonicBytes.length + saltBytes.length)
+  combinedBytes.set(mnemonicBytes)
+  combinedBytes.set(saltBytes, mnemonicBytes.length)
+  
+  // Return SHA-256 hash as simplified seed
+  return await sha256(combinedBytes)
+}
+
+export function mnemonicToEntropy(mnemonic: string): string {
+  const words = mnemonic.trim().split(/\s+/)
+  
+  // Convert words back to binary
+  let binaryString = ''
+  for (const word of words) {
+    const index = BIP39_WORDLIST.indexOf(word.toLowerCase())
+    if (index === -1) return ''
+    binaryString += index.toString(2).padStart(11, '0')
+  }
+  
+  // Remove checksum bits
+  const entropyLength = (words.length * 11 - words.length / 3) 
+  const entropyBinary = binaryString.slice(0, Math.floor(entropyLength))
+  
+  // Convert to hex
+  let hex = ''
+  for (let i = 0; i < entropyBinary.length; i += 8) {
+    const byte = parseInt(entropyBinary.slice(i, i + 8), 2)
+    hex += byte.toString(16).padStart(2, '0')
+  }
+  
+  return hex
+}
+
+export async function derivePrivateKey(seed: Uint8Array, path: string): Promise<string> {
+  // Simplified HD key derivation (would use proper BIP32 in production)
+  const pathBytes = new TextEncoder().encode(path)
+  const combinedBytes = new Uint8Array(seed.length + pathBytes.length)
+  combinedBytes.set(seed)
+  combinedBytes.set(pathBytes, seed.length)
+  
+  const hash = await sha256(combinedBytes)
+  return Array.from(hash).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+export function generateAddressFromPrivateKey(privateKeyHex: string, addressType: string = 'p2pkh'): string {
+  // Simplified address generation
+  const hash = privateKeyHex.slice(0, 40) // Take first 20 bytes as hash
+  
+  switch (addressType) {
+    case 'p2pkh':
+      return '1' + hash.slice(0, 33) // Simplified P2PKH address
+    case 'p2sh':
+      return '3' + hash.slice(0, 33) // Simplified P2SH address
+    case 'bech32':
+      return 'bc1q' + hash.slice(0, 32) // Simplified Bech32 address
+    case 'taproot':
+      return 'bc1p' + hash.slice(0, 32) // Simplified Taproot address
+    default:
+      return '1' + hash.slice(0, 33)
+  }
+}
