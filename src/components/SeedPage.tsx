@@ -18,7 +18,7 @@ import {
   mnemonicToEntropy,
   derivePrivateKey,
   generateAddressFromPrivateKey
-} from '@/lib/bitcoin-lite'
+} from '@/lib/bitcoin'
 import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 export function SeedPage() {

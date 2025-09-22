@@ -14,7 +14,7 @@ import {
   validateWif, 
   generateWifSteps,
   isValidHex 
-} from '@/lib/bitcoin-lite'
+} from '@/lib/bitcoin'
 import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 export function PrivateKeyPage() {

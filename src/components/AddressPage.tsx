@@ -18,7 +18,7 @@ import {
   generateAddresses,
   doubleSha256,
   base58Encode
-} from '@/lib/bitcoin-lite'
+} from '@/lib/bitcoin'
 import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 export function AddressPage() {
@@ -185,12 +185,16 @@ export function AddressPage() {
 
   // Validate address
   useEffect(() => {
-    if (validationInput) {
-      const result = validateBitcoinAddress(validationInput)
-      setValidationResult({ isValid: result.valid, error: result.error })
-    } else {
-      setValidationResult(null)
+    const validateAddress = async () => {
+      if (validationInput) {
+        const result = await validateBitcoinAddress(validationInput)
+        setValidationResult({ isValid: result.valid, error: result.error })
+      } else {
+        setValidationResult(null)
+      }
     }
+    
+    validateAddress()
   }, [validationInput])
 
   const copyToClipboard = (text: string) => {
