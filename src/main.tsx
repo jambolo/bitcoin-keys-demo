@@ -11,6 +11,9 @@ import { ErrorFallback } from './ErrorFallback.tsx'
 import "./main.css"
 import "./index.css"
 
+import { Buffer } from 'buffer';
+window.Buffer = Buffer;
+
 // Ensure Buffer is available before starting the app
 if (typeof window !== 'undefined') {
   console.log('Buffer availability check:', !!(window as any).Buffer)
