@@ -1,4 +1,4 @@
-# Bitcoin Address Demo
+# Bitcoin Address and Keys Demo
 
 A comprehensive educational tool that demonstrates Bitcoin address and key concepts through interactive pages covering key generation, encoding, and address derivation.
 
@@ -6,6 +6,7 @@ A comprehensive educational tool that demonstrates Bitcoin address and key conce
 1. Educational - Clear step-by-step demonstrations of cryptographic processes with visual breakdowns
 2. Interactive - Real-time validation and derivation with immediate feedback on user inputs
 3. Comprehensive - Complete coverage of Bitcoin key formats and address types with cross-referencing
+4. Compliant - All results are fully compliant with all cryptographic and Bitcoin standards, protocols, and conventions.
 
 **Complexity Level**: Light Application (multiple features with basic state)
 - The app provides multiple interconnected demonstration pages that maintain shared Bitcoin components and state between tabs, offering educational value through interactive cryptographic tools.
