@@ -1,12 +1,6 @@
-import * as bitcoin from 'bitcoinjs-lib'
-import * as bip39 from 'bip39'
-import { ECPairFactory } from 'ecpair'
-import * as tinysecp256k1 from 'tiny-secp256k1'
-import BIP32Factory from 'bip32'
-
-const ECPair = ECPairFactory(tinysecp256k1)
-const bip32 = BIP32Factory(tinysecp256k1)
-
+// Minimal placeholder implementation to keep the demo self-contained.
+// Heavy crypto libraries that rely on WebAssembly (like tiny-secp256k1) are
+// intentionally omitted to avoid loading missing WASM assets in the browser.
 export interface BIP86TestVector {
   mnemonic: string
   derivationPath: string
