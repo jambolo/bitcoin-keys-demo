@@ -1,10 +1,3 @@
-import React from 'react'
-
-export function TestComponent() {
-  return (
-    <div style={{ padding: '20px', backgroundColor: 'lightblue' }}>
-      <h1>Test Component</h1>
-      <p>This is a simple test to see if React is working.</p>
-    </div>
-  )
-}
+// This test file is no longer needed
+// Testing should be done through the main application
+export {}
