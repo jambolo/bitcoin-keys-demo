@@ -1,6 +1,5 @@
 import { Buffer } from '@/lib/polyfills'
 import { 
-  CURVE_ORDER,
   generatePublicKey,
   doubleSha256,
   hash160
@@ -9,6 +8,8 @@ import {
   decodeBase58,
   encodeBase58,
 } from './base58'
+
+import * as secp256k1 from 'secp256k1'
 
 export interface BitcoinKeyData {
   privateKeyWif?: string
@@ -134,8 +135,7 @@ export async function validateWif(wif: string): Promise<{ valid: boolean; error?
     }
     
     // Check private key range
-    const privateKeyInt = BigInt('0x' + decoded.privateKeyHex)
-    if (privateKeyInt <= 0n || privateKeyInt >= CURVE_ORDER) {
+    if (!secp256k1.privateKeyVerify(Buffer.from(decoded.privateKeyHex, 'hex'))) {
       return { valid: false, error: 'Private key is outside of the valid range' }
     }
     

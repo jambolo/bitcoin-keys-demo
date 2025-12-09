@@ -12,7 +12,7 @@ import {
   privateKeyFromWif, 
   validatePublicKey,
   BitcoinKeyData 
-} from '@/lib/bitcoin'
+} from '@/lib/keys'
 
 export function PublicKeyPage() {
   // Persistent inputs using useKV

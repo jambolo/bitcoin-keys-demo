@@ -10,15 +10,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Copy, Shuffle, ArrowRight, Key } from '@phosphor-icons/react'
 import { Buffer } from '@/lib/polyfills'
+import { privateKeyFromHex } from '@/lib/keys'
 import { 
-  privateKeyFromHex as importedPrivateKeyFromHex,
   generateMnemonic,
   validateMnemonic,
   mnemonicToSeed,
   mnemonicToEntropy,
   derivePrivateKey,
-  generateAddressFromPrivateKey
-} from '@/lib/bitcoin'
+} from '@/lib/bip39'
+import { generateAddressFromPrivateKey } from '@/lib/address'
 import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 export function SeedPage() {

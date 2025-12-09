@@ -7,18 +7,20 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Copy, Shuffle, ArrowRight } from '@phosphor-icons/react'
+import {   doubleSha256 } from '@/lib/crypto'
 import { 
   generateRandomPrivateKey,
   privateKeyFromWif,
   privateKeyFromHex,
+  isValidHex,
+  BitcoinKeyData,
+} from '@/lib/keys'
+import { 
   validateBitcoinAddress,
   decodeAddress,
-  BitcoinKeyData,
-  isValidHex,
   generateAddresses,
-  doubleSha256,
-  base58Encode
-} from '@/lib/bitcoin'
+} from '@/lib/address'
+import { encodeBase58 } from '@/lib/base58'
 import { QRCodeDisplay } from '@/components/QRCodeDisplay'
 
 export function AddressPage() {
@@ -128,7 +130,7 @@ export function AddressPage() {
           const p2pkhWithChecksum = new Uint8Array(25)
           p2pkhWithChecksum.set(p2pkhPayload)
           p2pkhWithChecksum.set(p2pkhChecksum.slice(0, 4), 21)
-          const p2pkhAddress = base58Encode(p2pkhWithChecksum)
+          const p2pkhAddress = encodeBase58(p2pkhWithChecksum)
           
           // Generate P2SH address
           const p2shPayload = new Uint8Array(21)
@@ -138,7 +140,7 @@ export function AddressPage() {
           const p2shWithChecksum = new Uint8Array(25)
           p2shWithChecksum.set(p2shPayload)
           p2shWithChecksum.set(p2shChecksum.slice(0, 4), 21)
-          const p2shAddress = base58Encode(p2shWithChecksum)
+          const p2shAddress = encodeBase58(p2shWithChecksum)
           
           data = {
             publicKeyHash: hashInput,
