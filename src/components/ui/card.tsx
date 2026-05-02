@@ -1,84 +1,58 @@
-import { ComponentProps } from "react"
+import { ComponentProps } from 'react'
+import {
+  Box,
+  Card as MuiCard,
+  CardActions,
+  CardContent as MuiCardContent,
+  Typography,
+} from '@mui/material'
 
-import { cn } from "@/lib/utils"
-
-function Card({ className, ...props }: ComponentProps<"div">) {
+function Card({ children, ...props }: ComponentProps<typeof MuiCard>) {
   return (
-    <div
-      data-slot="card"
-      className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
-        className
-      )}
-      {...props}
-    />
+    <MuiCard {...props} sx={{ borderRadius: 2, ...(props.sx as object) }}>
+      {children}
+    </MuiCard>
   )
 }
 
-function CardHeader({ className, ...props }: ComponentProps<"div">) {
+function CardHeader({ children, ...props }: ComponentProps<typeof Box>) {
   return (
-    <div
-      data-slot="card-header"
-      className={cn(
-        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
-        className
-      )}
-      {...props}
-    />
+    <Box {...props} sx={{ px: 3, pt: 3, pb: 1.5, ...(props.sx as object) }}>
+      {children}
+    </Box>
   )
 }
 
-function CardTitle({ className, ...props }: ComponentProps<"div">) {
+function CardTitle({ children, ...props }: ComponentProps<typeof Typography>) {
   return (
-    <div
-      data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
-      {...props}
-    />
+    <Typography {...props} variant="h6" component="h3" sx={{ fontWeight: 600, ...(props.sx as object) }}>
+      {children}
+    </Typography>
   )
 }
 
-function CardDescription({ className, ...props }: ComponentProps<"div">) {
+function CardDescription({ children, ...props }: ComponentProps<typeof Typography>) {
   return (
-    <div
-      data-slot="card-description"
-      className={cn("text-muted-foreground text-sm", className)}
-      {...props}
-    />
+    <Typography {...props} variant="body2" color="text.secondary" sx={{ mt: 0.5, ...(props.sx as object) }}>
+      {children}
+    </Typography>
   )
 }
 
-function CardAction({ className, ...props }: ComponentProps<"div">) {
+function CardAction({ children, ...props }: ComponentProps<typeof Box>) {
   return (
-    <div
-      data-slot="card-action"
-      className={cn(
-        "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
-        className
-      )}
-      {...props}
-    />
+    <Box {...props} sx={{ display: 'flex', justifyContent: 'flex-end', ...(props.sx as object) }}>
+      {children}
+    </Box>
   )
 }
 
-function CardContent({ className, ...props }: ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="card-content"
-      className={cn("px-6", className)}
-      {...props}
-    />
-  )
+function CardContent({ children, ...props }: ComponentProps<typeof MuiCardContent>) {
+  return <MuiCardContent {...props}>{children}</MuiCardContent>
 }
 
-function CardFooter({ className, ...props }: ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="card-footer"
-      className={cn("flex items-center px-6 [.border-t]:pt-6", className)}
-      {...props}
-    />
-  )
+function CardFooter({ children, ...props }: ComponentProps<typeof CardActions>) {
+  return <CardActions {...props}>{children}</CardActions>
 }
 
 export {

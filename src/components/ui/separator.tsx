@@ -1,26 +1,15 @@
-"use client"
-
-import { ComponentProps } from "react"
-import * as SeparatorPrimitive from "@radix-ui/react-separator"
-
-import { cn } from "@/lib/utils"
+import { Divider } from '@mui/material'
 
 function Separator({
-  className,
   orientation = "horizontal",
-  decorative = true,
-  ...props
-}: ComponentProps<typeof SeparatorPrimitive.Root>) {
+}: {
+  orientation?: 'horizontal' | 'vertical'
+  decorative?: boolean
+}) {
   return (
-    <SeparatorPrimitive.Root
-      data-slot="separator-root"
-      decorative={decorative}
+    <Divider
       orientation={orientation}
-      className={cn(
-        "bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px",
-        className
-      )}
-      {...props}
+      sx={{ my: orientation === 'horizontal' ? 1 : 0 }}
     />
   )
 }

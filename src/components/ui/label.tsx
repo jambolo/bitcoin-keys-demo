@@ -1,23 +1,11 @@
-"use client"
+import { ComponentProps } from 'react'
+import { Typography } from '@mui/material'
 
-import { ComponentProps } from "react"
-import * as LabelPrimitive from "@radix-ui/react-label"
-
-import { cn } from "@/lib/utils"
-
-function Label({
-  className,
-  ...props
-}: ComponentProps<typeof LabelPrimitive.Root>) {
+function Label({ children, ...props }: ComponentProps<'label'>) {
   return (
-    <LabelPrimitive.Root
-      data-slot="label"
-      className={cn(
-        "flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
-        className
-      )}
-      {...props}
-    />
+    <Typography component="label" variant="body2" sx={{ fontWeight: 500 }} {...props}>
+      {children}
+    </Typography>
   )
 }
 

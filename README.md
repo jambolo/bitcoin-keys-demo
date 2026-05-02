@@ -1,6 +1,6 @@
 # Bitcoin Keys Demo
 
-An interactive Github Spark demo for exploring Bitcoin cryptography concepts—key generation, encoding, and address derivation.
+An interactive Bitcoin cryptography demo for exploring key generation, encoding, and address derivation.
 
 ## Features
 

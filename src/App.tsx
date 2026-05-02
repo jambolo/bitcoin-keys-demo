@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react'
+import { Box, Container, Tab, Tabs, Typography } from '@mui/material'
 import { BitcoinErrorBoundary } from '@/components/BitcoinErrorBoundary'
 import { PrivateKeyPage } from '@/components/PrivateKeyPage'
 import { PublicKeyPage } from '@/components/PublicKeyPage'
@@ -12,74 +11,67 @@ import { Key, Shield, MapPin, Coins, Plant } from '@phosphor-icons/react'
 function App() {
   const [activeTab, setActiveTab] = useState('private-key')
 
-  // No initialization needed for bitcoin-lite
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Bitcoin Address and Keys Demo</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Explore Bitcoin cryptography through interactive demonstrations of key generation, 
+    <Box sx={{ minHeight: '100vh', background: 'linear-gradient(180deg, #f6f8fb 0%, #ffffff 35%, #f7fafc 100%)' }}>
+      <Container maxWidth="xl" sx={{ py: 4, px: { xs: 2, md: 3 } }}>
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Typography variant="h3" component="h1" sx={{ mb: 1.5, fontWeight: 700 }}>
+            Bitcoin Address and Keys Demo
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary" sx={{ maxWidth: 760, mx: 'auto' }}>
+            Explore Bitcoin cryptography through interactive demonstrations of key generation,
             encoding, and address derivation processes.
-          </p>
-        </div>
+          </Typography>
+        </Box>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
-            <TabsTrigger value="private-key" className="flex items-center gap-2">
-              <Key size={16} />
-              Private Key
-            </TabsTrigger>
-            <TabsTrigger value="public-key" className="flex items-center gap-2">
-              <Shield size={16} />
-              Public Key
-            </TabsTrigger>
-            <TabsTrigger value="address" className="flex items-center gap-2">
-              <MapPin size={16} />
-              Address
-            </TabsTrigger>
-            <TabsTrigger value="mini-key" className="flex items-center gap-2">
-              <Coins size={16} />
-              Mini Key
-            </TabsTrigger>
-            <TabsTrigger value="seed" className="flex items-center gap-2">
-              <Plant size={16} />
-              Seed Phrase
-            </TabsTrigger>
-          </TabsList>
+        <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: 'background.paper', mb: 3 }}>
+          <Tabs
+            value={activeTab}
+            onChange={(_, value) => setActiveTab(value)}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            sx={{ px: 1.5 }}
+          >
+            <Tab icon={<Key size={16} />} iconPosition="start" value="private-key" label="Private Key" />
+            <Tab icon={<Shield size={16} />} iconPosition="start" value="public-key" label="Public Key" />
+            <Tab icon={<MapPin size={16} />} iconPosition="start" value="address" label="Address" />
+            <Tab icon={<Coins size={16} />} iconPosition="start" value="mini-key" label="Mini Key" />
+            <Tab icon={<Plant size={16} />} iconPosition="start" value="seed" label="Seed Phrase" />
+          </Tabs>
+        </Box>
 
-          <TabsContent value="private-key">
+          {activeTab === 'private-key' && (
             <BitcoinErrorBoundary fallbackTitle="Private Key Error">
               <PrivateKeyPage />
             </BitcoinErrorBoundary>
-          </TabsContent>
+          )}
 
-          <TabsContent value="public-key">
+          {activeTab === 'public-key' && (
             <BitcoinErrorBoundary fallbackTitle="Public Key Error">
               <PublicKeyPage />
             </BitcoinErrorBoundary>
-          </TabsContent>
+          )}
 
-          <TabsContent value="address">
+          {activeTab === 'address' && (
             <BitcoinErrorBoundary fallbackTitle="Address Error">
               <AddressPage />
             </BitcoinErrorBoundary>
-          </TabsContent>
+          )}
 
-          <TabsContent value="mini-key">
+          {activeTab === 'mini-key' && (
             <BitcoinErrorBoundary fallbackTitle="Mini Key Error">
               <MiniKeyPage />
             </BitcoinErrorBoundary>
-          </TabsContent>
+          )}
 
-          <TabsContent value="seed">
+          {activeTab === 'seed' && (
             <BitcoinErrorBoundary fallbackTitle="Seed Phrase Error">
               <SeedPage />
             </BitcoinErrorBoundary>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
+          )}
+      </Container>
+    </Box>
   )
 }
 
